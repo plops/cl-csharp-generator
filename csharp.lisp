@@ -52,8 +52,7 @@
   ((type-env :initarg :type-env :accessor type-env :initform (make-hash-table))
    (public-p :initarg :public-p :accessor public-p :type boolean :initform nil)
    (private-p :initarg :private-p :accessor private-p :type boolean :initform nil)
-   (return-type :initarg :return-type :accessor return-type :initform nil)
-   ))
+   (return-type :initarg :return-type :accessor return-type :initform nil)))
 
 
 (defclass class-declare-state ()
@@ -80,6 +79,10 @@ switches. Return body and state."
 			      (declare (ignorable symb))
 			      (loop for var in vars do
 				   (setf (gethash var (type-env state)) type))))
+			  (when (eq (first declaration) 'public)
+			    (setf (public-p state) t))
+			  (when (eq (first declaration) 'private)
+			    (setf (private-p state) t))
 			  (when (eq (first declaration) 'values)
 			    (destructuring-bind (symb &rest types-opt) declaration
 			      (declare (ignorable symb))
@@ -91,6 +94,30 @@ switches. Return body and state."
 				  (unless (eq #\& (aref (format nil "~a" type) 0))
 				    (push type types)))
 				(setf (return-type state) (reverse types))))))
+		     (progn
+		       (push e new-body)
+		       (setf looking-p nil)))
+		 (progn
+		   (setf looking-p nil)
+		   (push e new-body)))
+	     (push e new-body)))
+    (values (reverse new-body) state)))
+
+(defun class-consume-declare (body)
+  "take a list of instructions from body, parse type declarations,
+return the body without them and a state object with some boolean
+switches Return body and state."
+  (let ((state (make-instance 'method-declare-state))
+	(looking-p t) 
+	(new-body nil))
+    (loop for e in body do
+	 (if looking-p
+	     (if (listp e)
+		 (if (eq (car e) 'declare)
+		     (loop for declaration in (cdr e) do
+		       (when (eq (first declaration) 'public)
+			    (setf (public-p state) t))
+		       )
 		     (progn
 		       (push e new-body)
 		       (setf looking-p nil)))
