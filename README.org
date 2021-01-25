@@ -1,0 +1,5 @@
+- based on cl-cpp-generator2
+- install mono on fedora:
+#+begin_example
+sudo dnf install mono-devel
+#+end_example
