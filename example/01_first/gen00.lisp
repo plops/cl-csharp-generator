@@ -9,19 +9,10 @@
 
 (in-package :cl-csharp-generator)
 
-(setf *features* (union *features* `()))
-
-(setf *features* (set-difference *features*
-				 '()))
-
 
 (progn
   (defparameter *source-dir* #P"example/01_first/source/")
-  
-  (defparameter *day-names*
-    '("Monday" "Tuesday" "Wednesday"
-      "Thursday" "Friday" "Saturday"
-      "Sunday"))
+
   (write-source
    (asdf:system-relative-pathname
     'cl-csharp-generator

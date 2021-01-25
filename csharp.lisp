@@ -28,7 +28,7 @@
 	 (code-str (emit-c :code code :header-only nil))
 	 (fn-hash (sxhash fn))
 	 (code-hash (sxhash code-str)))
-    (format t "write code into file: '~a'~%" fn)
+   ; (format t "write code into file: '~a'~%" fn)
     (multiple-value-bind (old-code-hash exists) (gethash fn-hash *file-hashes*)
       (when (or (not exists) ignore-hash (/= code-hash old-code-hash)
 		(not (probe-file fn)))
@@ -41,31 +41,26 @@
 			   :if-exists :supersede
 			   :if-does-not-exist :create)
 	  (write-sequence code-str s))
-	;; https://travisdowns.github.io/blog/2019/11/19/toupper.html
-	;; header reordering can affect compilation performance
-	;; FIXME: figure out how to prevent that
-       (when format
+	#+nil (when format
 	 (sb-ext:run-program "/usr/bin/clang-format"
 			     (list "-i"  (namestring fn)
-				   ;; "-style='{PenaltyReturnTypeOnItsOwnLine: 100000000}'"
-				   )))))))
-
-;; http://clhs.lisp.se/Body/s_declar.htm
-;; http://clhs.lisp.se/Body/d_type.htm
-
-;; go through the body until no declare anymore
+	)))))))
 
 
+(defclass method-declare-state ()
+  ((type-env :initarg :type-env :accessor type-env :initform (make-hash-table))
+   (public-p :initarg :public-p :accessor public-p :type boolean :initform nil)
+   (private-p :initarg :private-p :accessor private-p :type boolean :initform nil)
+   (return-type :initarg :return-type :accessor return-type :initform nil)))
 
-  ;; (declare (type int a b) (type float c) 
-  ;; (declare (values int &optional))
-  ;; (declare (values int float &optional))
+(defparameter *bla* (make-instance 'method-declare-state))
 
-  ;; FIXME doesnt handle documentation strings
+(defclass class-declare-state ()
+  (
+   (public-p :initarg :public-p :accessor public-p)
+   ;(private-p :initarg :private-p :accessor private-p)
+   ))
 
-
-
-;; FIXME: misses const override
 (defun consume-declare (body)
   "take a list of instructions from body, parse type declarations,
 return the body without them and a hash table with an environment. the
