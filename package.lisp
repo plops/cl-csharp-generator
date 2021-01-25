@@ -1,6 +1,6 @@
-(defpackage :cl-cpp-generator2
+(defpackage :cl-csharp-generator
   (:use :cl
 	:alexandria)
   (:export
    #:write-source
-   #:emit-c))
+   #:emit-csharp))
