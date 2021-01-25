@@ -54,6 +54,10 @@
    (private-p :initarg :private-p :accessor private-p :type boolean :initform nil)
    (return-type :initarg :return-type :accessor return-type :initform nil)))
 
+(defclass let-declare-state ()
+  ((type-env :initarg :type-env :accessor type-env :initform (make-hash-table))
+   ))
+
 
 (defclass class-declare-state ()
   (
@@ -103,6 +107,34 @@ switches. Return body and state."
 	     (push e new-body)))
     (values (reverse new-body) state)))
 
+(defun let-consume-declare (body)
+  "take a list of instructions from body, parse type declarations,
+return the body without them and a state object that contains a hash
+table with an environment, the return type and some boolean
+switches. Return body and state."
+  (let ((state (make-instance 'let-declare-state))
+	(looking-p t) 
+	(new-body nil))
+    (loop for e in body do
+	 (if looking-p
+	     (if (listp e)
+		 (if (eq (car e) 'declare)
+		     (loop for declaration in (cdr e) do
+			  (when (eq (first declaration) 'type)
+			    (destructuring-bind (symb type &rest vars) declaration
+			      (declare (ignorable symb))
+			      (loop for var in vars do
+				   (setf (gethash var (type-env state)) type))))
+			  )
+		     (progn
+		       (push e new-body)
+		       (setf looking-p nil)))
+		 (progn
+		   (setf looking-p nil)
+		   (push e new-body)))
+	     (push e new-body)))
+    (values (reverse new-body) state)))
+
 (defun class-consume-declare (body)
   "take a list of instructions from body, parse type declarations,
 return the body without them and a state object with some boolean
@@ -127,83 +159,67 @@ switches Return body and state."
 	     (push e new-body)))
     (values (reverse new-body) state)))
 
-(defun lookup-type (name &key env)
-  "get the type of a variable from an environment"
-  (gethash name env))
+(defun lookup-type (name &key state)
+  "get the type of a variable from an environment in state"
+  (gethash name (type-env state)))
 
-(defun variable-declaration (&key name env emit)
-  (let* ((type (lookup-type name :env env)))
+(defun variable-declaration (&key name state emit)
+  (let* ((type (lookup-type name :state state)))
     (cond ((null type)
-
-	   (format nil "~a ~a"
-		   ;#+generic-c "__auto_type"
-					; #-generic-c "auto"
-		   *auto-keyword*
-		    (funcall emit name)))
+	   (format nil "var ~a"
+		   (funcall emit name)))
 	  ((and (listp type)
 		(eq 'array (first type)))
 	   (progn
 	      ;; array
 	      (destructuring-bind (array_ element-type &rest dims) type
 		(assert (eq array_ 'array))
-		(format nil "~a ~a~{[~a]~}"
+		(format nil "~a[] ~a~{[~a]~}"
 			(funcall emit element-type)
 			(funcall emit name)
 			(mapcar emit dims)))))
 	  (t (format nil "~a ~a"
 		(if type
 		    (funcall emit type)
-		    ;#+generic-c "__auto_type"
-					;#-generic-c "auto"
-		    *auto-keyword*
+		    "var"
 		    )
-		(funcall emit name))))
-    #+nil (if (listp type)
-	(if (null type)
-	    (format nil "~a ~a"
-		    #+generic-c "__auto_type"
-		    #-generic-c "auto"
-		    (funcall emit name))
-	    (progn
-	      ;; array
-	      (destructuring-bind (array_ element-type &rest dims) type
-		(assert (eq array_ 'array))
-		(format nil "~a ~a~{[~a]~}"
-			element-type
-			(funcall emit name)
-			(mapcar emit dims)))))
-	(format nil "~a ~a"
-		(if type
-		    (funcall emit type)
-		    #+generic-c "__auto_type"
-		    #-generic-c "auto"
-		    )
-		(funcall emit name)))))
+		(funcall emit name))))))
 
 (defun parse-let (code emit)
   "let ({var | (var [init-form])}*) declaration* form*"
   (destructuring-bind (decls &rest body) (cdr code)
-    (multiple-value-bind (body env captures constructs const-p explicit-p inline-p static-p virtual-p template template-instance) (consume-declare body)
+    (multiple-value-bind (body state) (let-consume-declare body)
       (with-output-to-string (s)
-	(format s "~a"
-		(funcall emit
-			`(do0
-			  ,@(loop for decl in decls collect
-				 (if (listp decl) ;; split into name and initform
-				     (destructuring-bind (name &optional value) decl
-				       (format nil "~a ~@[ = ~a~];"
-					       (variable-declaration :name name :env env :emit emit)
-					       
-					       (when value
-						   (funcall emit value))))
-				     (format nil "~a;"
-					     (variable-declaration :name decl :env env :emit emit))))
-			  ,@body)))))))
+	(format
+	 s "~a"
+	 (funcall
+	  emit
+	  `(do0
+	    ,@(loop for decl in decls
+		    collect
+		    (if (listp decl) ;; split into name and initform
+			(destructuring-bind (name &optional value) decl
+			  (format nil "~a ~@[ = ~a~];"
+				  (variable-declaration :name name :env env :emit emit)
+				  (when value
+				    (funcall emit value))))
+			(format nil "~a;"
+				(variable-declaration :name decl :env env :emit emit))))
+	    ,@body)))))))
 
-(defun parse-defun (code emit &key header-only (class nil))
+;; positional:
+;; static void PrintOrderDetails(string sellerName, int orderNum, string productName)
+
+;; optional:
+;; public void ExampleMethod(int required, string optionalstr = "default string",
+;;     int optionalint = 10)
+
+
+
+(defun parse-defmethod (code emit &key header-only (class nil))
   ;; defun function-name lambda-list [declaration*] form*
   (destructuring-bind (name lambda-list &rest body) (cdr code)
-    (multiple-value-bind (body env captures constructs const-p explicit-p inline-p static-p virtual-p template template-instance) (consume-declare body) ;; py
+    (multiple-value-bind (body state) (method-consume-declare body)
       (multiple-value-bind (req-param opt-param res-param
 				      key-param other-key-p
 				      aux-param key-exist-p)
@@ -211,198 +227,56 @@ switches Return body and state."
 	(declare (ignorable req-param opt-param res-param
 			    key-param other-key-p aux-param key-exist-p))
 	(with-output-to-string (s)
-
-	  
-	  ;;         template          static          inline  virtual ret   params     header-only
-	  ;;                                   explicit                   name  const             constructs
-	  ;;         1                 2       3       4       5       6  7  8  9       10        11 
-	  (format s "~@[template<~a> ~]~@[~a ~]~@[~a ~]~@[~a ~]~@[~a ~]~a ~a ~a ~@[~a~] ~:[~;;~]  ~@[: ~a~]"
-		  ;; 1 template
-		  (when template
-		    template)
-		  ;; 2 static
-		  (when (and static-p
-			     header-only) 
-		    "static")
-		  ;; 3 explicit
-		  (when (and explicit-p
-			     header-only)
-		    "explicit")
-		  ;; 4 inline
-		  (when (and inline-p
-			     header-only)
-		    "inline")
-		  ;; 5 virtual
-		  (when (and virtual-p
-			     header-only
-			     )
-		    ;(format t "virtual defun~%")
-		    "virtual")
-		  
-		  ;; 6 return value
-		  (let ((r (gethash 'return-values env)))
+	  (let ((visibility nil))
+	    (when (public-p state)
+	      (setf visibility "public"))
+	    (when (private-p state)
+	      (setf visibility "private"))
+	    
+	   ;;         visibility name
+	   ;;                 ret   params
+	   ;;         1       2  3  4
+	   (format s "~@[~a ~]~a ~a ~a"
+		   ;; 1 visibilty
+		   visibility
+		   ;; 2 return value
+		   (let ((r (return-type state)))
 		    (if (< 1 (length r))
 			(break "multiple return values unsupported: ~a"
 			       r)
 			(if (car r)
 			    (case (car r)
-			      (:constructor "") ;; (values :constructor) will not print anything
+			      ;(:constructor "") ;; (values :constructor) will not print anything
 			      (t (car r)))
 			    "void")))
-		  ;; 7 function-name, add class if not header
-		  (if class
-		      (if header-only
-			  name
-			  (format nil "~a::~a" class name))
-		      name)
-
-		  ;; 8 positional parameters, followed by key parameters
-		  (funcall emit `(paren
-				  ;; positional
-				  ,@(loop for p in req-param collect
-					 (format nil "~a ~a"
-						 (let ((type (gethash p env)))
-						   (if type
-						       (funcall emit type)
-						       (break "can't find type for positional parameter ~a in defun"
-							      p)))
-						 p))
-				  ;; key parameters
-				  ;; http://www.crategus.com/books/alexandria/pages/alexandria.0.dev_fun_parse-ordinary-lambda-list.html
-				  ,@(loop for ((keyword-name name) init supplied-p) in key-param collect
-					 (progn
-					   #+nil (format t "~s~%" (list (loop for k being the hash-keys in env using (hash-value v) collect
-									     (format nil "'~a'='~a'~%" k v)) :name name :keyword-name keyword-name :init init))
-					   (format nil "~a ~a ~@[~a~]"
-						   (let ((type (gethash name env)))
+		   ;; 3 name
+		   name
+		   ;; 4 positional parameters, followed by key parameters
+		   (funcall emit `(paren
+				   ;; positional
+				   ,@(loop for p in req-param
+					   collect
+					   (format nil "~a ~a"
+						   (let ((type (gethash p (type-env state))))
 						     (if type
 							 (funcall emit type)
-							 (break "can't find type for keyword parameter ~a in defun"
-								name)))
-						   name
-						   (when header-only ;; only in class definition
-						     (format nil "= ~a" (funcall emit init))))))
-				  ))
-		  ;; 9 const keyword
-		  (when const-p #+nil
-			(and const-p
-			     (not header-only))
-			"const")
-		  
-		  ;; 10 semicolon if header only
-		  header-only
-		  ;; 11 constructor initializers
-		  (when (and constructs
-			     (not header-only))
-		    (funcall emit `(comma ,@(mapcar emit constructs)))))
-	  (unless header-only
-	    (format s "~a" (funcall emit `(progn ,@body)))))))))
+							 (break "can't find type for positional parameter ~a in defun"
+								p)))
+						   p))
+				   ;; optional parameters
+				   ,@(loop for ((keyword-name name) init supplied-p) in key-param
+					   collect
+					   (progn
+					     (format nil "~a ~a ~@[~a~]"
+						     (let ((type (gethash name (type-env state))))
+						       (if type
+							   (funcall emit type)
+							   (break "can't find type for keyword parameter ~a in defun"
+								  name)))
+						     name
+						     (format nil "= ~a" (funcall emit init)))))))))
+	  (format s "~a" (funcall emit `(progn ,@body))))))))
 
-(defun parse-defmethod (code emit &key header-only (class nil) (in-class-p nil))
-  ;; defun function-name lambda-list [declaration*] form*
-  (destructuring-bind (name lambda-list &rest body) (cdr code)
-    (multiple-value-bind (body env captures constructs const-p explicit-p inline-p static-p virtual-p template template-instance) (consume-declare body) ;; py
-      (multiple-value-bind (req-param opt-param res-param
-				      key-param other-key-p
-				      aux-param key-exist-p)
-	  (parse-ordinary-lambda-list lambda-list)
-	(declare (ignorable req-param opt-param res-param
-			    key-param other-key-p aux-param key-exist-p))
-	(when (and inline-p (not header-only))
-	  (return-from parse-defmethod ""))
-	(with-output-to-string (s)
-	  ;;         template          static          inline  virtual ret   params     header-only
-	  ;;                                   explicit                   name  const             constructs
-	  ;;         1                 2       3       4       5       6  7  8  9       10        11 
-	 ; format s "~@[template<~a> ~]~@[~a ~]~@[~a ~]~@[~a ~]~@[~a ~]~a ~a ~a ~@[~a~] ~:[~;;~]  ~@[: ~a~]"
-	
-	  (format s "~@[template<~a> ~]~@[~a ~]~@[~a ~]~@[~a ~]~@[~a ~]~a ~a ~a ~@[~a~] ~:[~;;~]  ~@[: ~a~]"
-		  ;; 1 template
-		  (when template
-		    template)
-		  ;; 2 static
-		  (when (and static-p
-			     header-only) 
-		    "static")
-		  ;; 3 explicit
-		  (when (and explicit-p
-			     header-only)
-		    "explicit")
-		  ;; 4 inline
-		  (when (and inline-p
-			     header-only)
-		    "inline")
-		  ;; 5 virtual
-		  (when (and virtual-p
-			     (not (eq in-class-p 'defclass-cpp))
-			    #+nil (or 
-				 ;(eq in-class-p 'defclass+)
-				 ;(eq in-class-p 'defclass-hpp)
-				 )
-			     
-			    ;(or in-class-p header-only)
-			     )
-		    ;(format t "virtual defmethod~%")
-		    "virtual")
-		  
-		  ;; 6 return value
-		  (let ((r (gethash 'return-values env)))
-		    (if (< 1 (length r))
-			(break "multiple return values unsupported: ~a"
-			       r)
-			(if (car r)
-			    (case (car r)
-			      (:constructor "") ;; (values :constructor) will not print anything
-			      (t (car r)))
-			    "void")))
-		  ;; 7 function-name, add class if not header
-		  (if class
-		      (if header-only
-			  name
-			  (format nil "~a~@[< ~a >~]::~a" class template-instance name))
-		      name)
-
-		  ;; positional parameters, followed by key parameters
-		  (funcall emit `(paren
-				  ;; positional
-				  ,@(loop for p in req-param collect
-					 (format nil "~a ~a"
-						 (let ((type (gethash p env)))
-						   (if type
-						       (funcall emit type)
-						       (break "can't find type for positional parameter ~a in defun"
-							      p)))
-						 p))
-				  ;; key parameters
-				  ;; http://www.crategus.com/books/alexandria/pages/alexandria.0.dev_fun_parse-ordinary-lambda-list.html
-				  ,@(loop for ((keyword-name name) init supplied-p) in key-param collect
-					 (progn
-					   #+nil (format t "~s~%" (list (loop for k being the hash-keys in env using (hash-value v) collect
-								       (format nil "'~a'='~a'~%" k v)) :name name :keyword-name keyword-name :init init))
-					  (format nil "~a ~a ~@[~a~]"
-						  (let ((type (gethash name env)))
-						    (if type
-							(funcall emit type)
-							(break "can't find type for keyword parameter ~a in defun"
-							       name)))
-						  name
-						  (when header-only ;; only in class definition
-						   (format nil "= ~a" (funcall emit init))))))
-				  ))
-		  ;; const keyword
-		  (when const-p #+nil
-		    (and const-p
-			 (not header-only))
-		    "const")
-		  
-		  ;; semicolon if header only
-		  (and (not inline-p) header-only)
-		  ;; constructor initializers
-		  (when (and constructs
-			 (not header-only))
-		    (funcall emit `(comma ,@(mapcar emit constructs)))))
-	  (when (or inline-p (not header-only))
-	   (format s "~a" (funcall emit `(progn ,@body)))))))))
 
 (defun parse-lambda (code emit)
   ;;  lambda lambda-list [declaration*] form*
