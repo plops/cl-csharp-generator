@@ -2,10 +2,11 @@
 	  (safety 3)
 	  (speed 0)
 	  (debug 3)))
-
 #-nil
-(progn (ql:quickload "alexandria")
-       (defpackage :cl-csharp-generator
+(progn
+  (ql:quickload "alexandria")
+  (ql:quickload "cl-ppcre")
+  (defpackage :cl-csharp-generator
 	 (:use :cl
 	       :alexandria
 	       :cl-ppcre)
@@ -51,9 +52,9 @@
   ((type-env :initarg :type-env :accessor type-env :initform (make-hash-table))
    (public-p :initarg :public-p :accessor public-p :type boolean :initform nil)
    (private-p :initarg :private-p :accessor private-p :type boolean :initform nil)
-   (return-type :initarg :return-type :accessor return-type :initform nil)))
+   (return-type :initarg :return-type :accessor return-type :initform nil)
+   ))
 
-(defparameter *bla* (make-instance 'method-declare-state))
 
 (defclass class-declare-state ()
   (
@@ -61,20 +62,12 @@
    ;(private-p :initarg :private-p :accessor private-p)
    ))
 
-(defun consume-declare (body)
+(defun method-consume-declare (body)
   "take a list of instructions from body, parse type declarations,
-return the body without them and a hash table with an environment. the
-entry return-values contains a list of return values. currently supports type, values, construct and capture declarations. construct is member assignment in constructors. capture is for lambda functions"
-  (let ((env (make-hash-table))
-	(captures nil)
-	(constructs nil)
-	(const-p nil)
-	(explicit-p nil)
-	(inline-p nil)
-	(static-p nil)
-	(virtual-p nil)
-	(template nil)
-	(template-instance nil)
+return the body without them and a state object that contains a hash
+table with an environment, the return type and some boolean
+switches. Return body and state."
+  (let ((state (make-instance 'method-declare-state))
 	(looking-p t) 
 	(new-body nil))
     (loop for e in body do
@@ -86,44 +79,18 @@ entry return-values contains a list of return values. currently supports type, v
 			    (destructuring-bind (symb type &rest vars) declaration
 			      (declare (ignorable symb))
 			      (loop for var in vars do
-				   (setf (gethash var env) type))))
-			  (when (eq (first declaration) 'capture)
-			    (destructuring-bind (symb &rest vars) declaration
-			      (declare (ignorable symb))
-			      (loop for var in vars do
-				   (push var captures))))
-
-			  (when (eq (first declaration) 'construct)
-			    (destructuring-bind (symb &rest vars) declaration
-			      (declare (ignorable symb))
-			      (loop for var in vars do
-				   (push var constructs))))
-			  (when (eq (first declaration) 'const)
-			    (setf const-p t))
-			  (when (eq (first declaration) 'explicit)
-			    (setf explicit-p t))
-			  (when (eq (first declaration) 'inline)
-			    (setf inline-p t))
-			  (when (eq (first declaration) 'virtual)
-			    (setf virtual-p t)
-			    )
-			  (when (eq (first declaration) 'static)
-			    (setf static-p t))
-			  (when (eq (first declaration) 'template)
-			    (setf template (second declaration)))
-			  (when (eq (first declaration) 'template-instance)
-			    (setf template-instance (second declaration)))
+				   (setf (gethash var (type-env state)) type))))
 			  (when (eq (first declaration) 'values)
-			(destructuring-bind (symb &rest types-opt) declaration
-			  (declare (ignorable symb))
-			  ;; if no values specified parse-defun will emit void
-			  ;; if (values :constructor) then nothing will be emitted
-			  (let ((types nil))
-			    ;; only collect types until occurrance of &optional
-			    (loop for type in types-opt do
-				 (unless (eq #\& (aref (format nil "~a" type) 0))
-				   (push type types)))
-			    (setf (gethash 'return-values env) (reverse types))))))
+			    (destructuring-bind (symb &rest types-opt) declaration
+			      (declare (ignorable symb))
+			      ;; if no values specified parse-defun will emit void
+			      ;; if (values :constructor) then nothing will be emitted
+			      (let ((types nil))
+				;; only collect types until occurrance of &optional
+				(loop for type in types-opt do
+				  (unless (eq #\& (aref (format nil "~a" type) 0))
+				    (push type types)))
+				(setf (return-type state) (reverse types))))))
 		     (progn
 		       (push e new-body)
 		       (setf looking-p nil)))
@@ -131,8 +98,7 @@ entry return-values contains a list of return values. currently supports type, v
 		   (setf looking-p nil)
 		   (push e new-body)))
 	     (push e new-body)))
-    (values (reverse new-body) env (reverse captures) (reverse constructs)
-	    const-p explicit-p inline-p static-p virtual-p template template-instance)))
+    (values (reverse new-body) state)))
 
 (defun lookup-type (name &key env)
   "get the type of a variable from an environment"
