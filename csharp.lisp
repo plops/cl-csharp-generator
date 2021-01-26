@@ -304,7 +304,7 @@ switches Return body and state."
 	    (setf visibility "public"))
 	  (when (private-p state)
 	    (setf visibility "private"))
-	  (format s "~a class ~a ~@[ : ~a~]"
+	  (format s "~a class ~a ~@[ : ~a ~]"
 		  visibility
 		  name
 		  (when parent
@@ -560,71 +560,13 @@ switches Return body and state."
 				     :header-only-p nil
 				     :in-class-p 'defclass+))))
 		   )
-		  (defclass
-			;; defclass class-name ({superclass-name}*) ({slot-specifier}*) [[class-option]]
-			;; class TA : public Faculty, public Student { ... }
-			;; defclass (class-name :template "T") ({superclass-name}*) ({slot-specifier}*) [[class-option]]
-			;; template<T> class TA...
-			;; defclass (class-name :template "T,y" :template-instance "std::integral_constant<T,y>") ...
-			;; template<typename T, T y> class NameExtractor<std::integral_constant<T, y>>  {
-			;; FIXME template stuff doesn't get emitted into cpp 
-			(destructuring-bind (name parents &rest body) (cdr code)
-			  #+nil(let ((class-name (if (listp name)
-						(progn
-						  ;(format t "template-class: ~a~%" name)
-						  (car name))
-						name))
-				(class-template nil)
-				(class-template-instance nil))
-			    (when (listp name)
-			      (destructuring-bind (name &key (template nil) (template-instance nil)) name
-				(setf class-name name
-				      class-template template
-				      class-template-instance template-instance)))
-			    
-			    (prog1
-				(progn ;if hook-defclass
-				    #+nil (progn
-				      ;; create class declaration with function headers
-				      (funcall hook-defclass
-					       (format nil "~@[template<~a> ~]class ~a~@[<~a>~] ~@[: ~a~] ~a"
-						       
-						       class-template
-						       (emit class-name)
-
-						       class-template-instance
-						       
-						       (when parents
-							 (emit `(comma ,parents)))
-						       (emit `(progn ,@body)
-							     :class nil ;(emit name)
-							     :hook-fun nil
-							     :hook-class hook-defclass
-							     :header-only-p t
-							     ;:in-class-p 'defclass-cpp
-							     )))
-				      " ")
-				    #+nil (progn
-				      ;; only create function definitions of the class
-				      ;; expand defun but non of the other commands
-				      (destructuring-bind (name parents &rest body) (cdr code)
-					(declare (ignorable parents))
-					(with-output-to-string (s)
-					  (loop for e in body do
-					    (when (and (listp e)
-						       (or (eq (car e) 'defmethod)
-							   (eq (car e) 'defmethod*)))
-					      (format s "~@[template< ~a > ~]~a"
-						      class-template
-						      (emit e
-							    :class
-							    (emit (format nil "~a~@[<~a>~]" class-name class-template-instance))
-							    :header-only-p nil
-							    :in-class-p 'defclass-cpp))))))))))))
+		  
 		  (protected (format nil "protected ~a" (emit (cadr code))))
 		  (public (format nil "public ~a" (emit (cadr code))))
 		  (defmethod
 		      (parse-defmethod code #'emit ))
+		  (defclass
+		      (parse-defclass code #'emit ))
 		  #+nil (defmethod*
 			 (if hook-defclass
 			     (parse-defmethod code #'emit :class current-class :header-only t)
