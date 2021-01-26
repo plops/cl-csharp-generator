@@ -31,6 +31,7 @@
        "bool jumpKeyWasPressed;"
        "float horizontalInput;"
        "Rigidbody body;"
+       "bool isGrounded;"
        (defmethod Start ()
 	 (setf body (GetComponent<Rigidbody>)))
        (defmethod Update ()
@@ -40,6 +41,8 @@
 	 (setf horizontalInput (Input.GetAxis (string "Horizontal"))))
        (defmethod FixedUpdate ()
 	 ;; once every physics update (100Hz)
+	 (unless isGrounded
+	   (return))
 	 (when jumpKeyWasPressed
 	   (setf jumpKeyWasPressed false)
 	   (body.AddForce (* 5 Vector3.up)
@@ -47,4 +50,12 @@
 	   )
 	 (setf body.velocity
 	       (new (Vector3 horizontalInput body.velocity.y 0)))
+	 )
+       (defmethod OnCollisionEnter (c)
+	 (declare (type Collision c))
+	 (setf isGrounded true)
+	 )
+       (defmethod OnCollisionExit (c)
+	 (declare (type Collision c))
+	 (setf isGrounded false)
 	 )))))
