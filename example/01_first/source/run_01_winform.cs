@@ -1,4 +1,6 @@
-using(System, System.Drawing, System.Windows.Forms);
+using System;
+using System.Drawing;
+using System.Windows.Forms;
 class(HelloWorld, Form(), declare(public ), public void Main (){
         Application.Run(new HelloWorld());
 }, void HelloWorld (){

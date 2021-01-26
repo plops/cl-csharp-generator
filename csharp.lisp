@@ -411,6 +411,11 @@ switches Return body and state."
 		   ;; new arg
 		   (let ((arg (cadr code)))
 		     (format nil "new ~a" (emit arg))))
+		  (using
+		   ;; using <sys0> <sys1> ..
+		   (let ((args (cdr code)))
+		     (format nil "~{using ~a~^;~%~}" (mapcar #'emit args)))
+		   )
 		  (indent
 		   ;; indent form
 		   (format nil "~{~a~}~a"
