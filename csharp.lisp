@@ -52,6 +52,7 @@
 (defclass method-declare-state ()
   ((type-env :initarg :type-env :accessor type-env :initform (make-hash-table))
    (public-p :initarg :public-p :accessor public-p :type boolean :initform nil)
+   (static-p :initarg :static-p :accessor static-p :type boolean :initform nil)
    (private-p :initarg :private-p :accessor private-p :type boolean :initform nil)
    (return-type :initarg :return-type :accessor return-type :initform nil)))
 
@@ -84,6 +85,8 @@ switches. Return body and state."
 			      (declare (ignorable symb))
 			      (loop for var in vars do
 				   (setf (gethash var (type-env state)) type))))
+			  (when (eq (first declaration) 'static)
+			    (setf (static-p state) t))
 			  (when (eq (first declaration) 'public)
 			    (setf (public-p state) t))
 			  (when (eq (first declaration) 'private)
@@ -235,13 +238,16 @@ switches Return body and state."
 	    (when (private-p state)
 	      (setf visibility "private"))
 	    
-	   ;;         visibility name
-	   ;;                 ret   params
-	   ;;         1       2  3  4
-	   (format s "~@[~a ~]~a ~a ~a"
+	   ;;         visibility         name
+	   ;;                 stat    ret   params
+	   ;;         1       2       3  4  5
+	   (format s "~@[~a ~]~@[~a ~]~a ~a ~a"
 		   ;; 1 visibilty
 		   visibility
-		   ;; 2 return value
+		   ;; 2 static
+		   (when (static-p state)
+		     "static")
+		   ;; 3 return value
 		   (let ((r (return-type state)))
 		    (if (< 1 (length r))
 			(break "multiple return values unsupported: ~a"
@@ -251,9 +257,9 @@ switches Return body and state."
 			      (:constructor "") ;; (values :constructor) will not print anything
 			      (t (car r)))
 			    "void")))
-		   ;; 3 name
+		   ;; 4 name
 		   name
-		   ;; 4 positional parameters, followed by key parameters
+		   ;; 5 positional parameters, followed by key parameters
 		   (funcall emit `(paren
 				   ;; positional
 				   ,@(loop for p in req-param

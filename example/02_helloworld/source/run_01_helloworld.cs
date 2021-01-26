@@ -1,6 +1,6 @@
 using System;
 public class HelloWorld {
-        public void Main (){
+        public static void Main (){
                 Console.WriteLine("Hello World from Mono!");
 }
 }
