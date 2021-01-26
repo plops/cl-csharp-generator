@@ -14,7 +14,9 @@
   (defparameter *source-dir* #P"example/03_unity/source/")
 
   (write-source
-   (asdf:system-relative-pathname
+   ;; class name has to be same as filename
+   "/home/martin/New Unity Project/Assets/Scripts/Player.cs"
+   #+nil (asdf:system-relative-pathname
     'cl-csharp-generator
     (merge-pathnames
      #P"01_Player.cs"
@@ -29,4 +31,4 @@
        (defmethod Start ()
 	 )
        (defmethod Update ()
-	      )))))
+	 ())))))

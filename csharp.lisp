@@ -232,6 +232,9 @@ switches Return body and state."
 	(declare (ignorable req-param opt-param res-param
 			    key-param other-key-p aux-param key-exist-p))
 	(with-output-to-string (s)
+	  ;; if no visibility string is given, C# defaults to private
+	  ;; here, i make visibility public by default,
+	  
 	  (let ((visibility "public"))
 	    (when (public-p state)
 	      (setf visibility "public"))
