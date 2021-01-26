@@ -29,18 +29,22 @@
 	    )
      (defclass Player (UnityEngine.MonoBehaviour)
        "bool jumpKeyWasPressed;"
+       "float horizontalInput;"
+       "Rigidbody body;"
        (defmethod Start ()
-	 )
+	 (setf body (GetComponent<Rigidbody>)))
        (defmethod Update ()
 	 (when (Input.GetKeyDown KeyCode.Space)
 	   (setf jumpKeyWasPressed true)
-	   ))
+	   )
+	 (setf horizontalInput (Input.GetAxis (string "Horizontal"))))
        (defmethod FixedUpdate ()
 	 ;; once every physics update (100Hz)
 	 (when jumpKeyWasPressed
 	   (setf jumpKeyWasPressed false)
-	   (let ((body (GetComponent<Rigidbody>)))
-	     (body.AddForce (* 5 Vector3.up)
-			    ForceMode.VelocityChange))
+	   (body.AddForce (* 5 Vector3.up)
+			  ForceMode.VelocityChange)
 	   )
+	 (setf body.velocity
+	       (new (Vector3 horizontalInput body.velocity.y 0)))
 	 )))))
