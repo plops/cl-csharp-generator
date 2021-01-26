@@ -32,7 +32,8 @@
        "float horizontalInput;"
        "Rigidbody body;"
        "bool isGrounded;"
-       "public Transform groundCheckTransform;"
+					;"public Transform groundCheckTransform;"
+       "[SerializeField] private Transform groundCheckTransform = null;"
        
        (defmethod Start ()
 	 (setf body (GetComponent<Rigidbody>)))
@@ -43,7 +44,11 @@
 	 (setf horizontalInput (Input.GetAxis (string "Horizontal"))))
        (defmethod FixedUpdate ()
 	 ;; once every physics update (100Hz)
-	 (unless isGrounded
+	 #+nil (unless isGrounded
+		 (return))
+	 (when (== 1 (dot (Physics.OverlapSphere groundCheckTransform.position
+					    0.1s0)
+		     Length))
 	   (return))
 	 (when jumpKeyWasPressed
 	   (setf jumpKeyWasPressed false)
@@ -51,7 +56,7 @@
 			  ForceMode.VelocityChange)
 	   )
 	 (setf body.velocity
-	       (new (Vector3 horizontalInput body.velocity.y 0)))
+	       (new (Vector3 (* 4 horizontalInput) body.velocity.y 0)))
 	 )
        (defmethod OnCollisionEnter (c)
 	 (declare (type Collision c))
