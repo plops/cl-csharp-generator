@@ -25,10 +25,13 @@
      ;; https://youtu.be/pwZpJzpE2lQ?t=2124
      (using System.Collections
 	    System.Collections.Generic
+	    UnityEngine
 	    )
      (defclass Player (UnityEngine.MonoBehaviour)
 	    
        (defmethod Start ()
 	 )
        (defmethod Update ()
-	 ())))))
+	 (when (Input.GetKeyDown KeyCode.Space)
+	   (Debug.Log (string "space pressed."))
+	   ))))))
