@@ -28,13 +28,19 @@
 	    UnityEngine
 	    )
      (defclass Player (UnityEngine.MonoBehaviour)
-	    
+       "bool jumpKeyWasPressed;"
        (defmethod Start ()
 	 )
        (defmethod Update ()
 	 (when (Input.GetKeyDown KeyCode.Space)
-	   ;; (Debug.Log (string "space pressed."))
+	   (setf jumpKeyWasPressed true)
+	   ))
+       (defmethod FixedUpdate ()
+	 ;; once every physics update (100Hz)
+	 (when jumpKeyWasPressed
+	   (setf jumpKeyWasPressed false)
 	   (let ((body (GetComponent<Rigidbody>)))
 	     (body.AddForce (* 5 Vector3.up)
 			    ForceMode.VelocityChange))
-	   ))))))
+	   )
+	 )))))
