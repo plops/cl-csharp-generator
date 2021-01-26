@@ -32,6 +32,8 @@
        "float horizontalInput;"
        "Rigidbody body;"
        "bool isGrounded;"
+       "public Transform groundCheckTransform;"
+       
        (defmethod Start ()
 	 (setf body (GetComponent<Rigidbody>)))
        (defmethod Update ()
