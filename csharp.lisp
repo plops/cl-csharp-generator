@@ -279,6 +279,42 @@ switches Return body and state."
 						     (format nil "= ~a" (funcall emit init)))))))))
 	  (format s "~a" (funcall emit `(progn ,@body))))))))
 
+;; //[access modifier] - [class] - [identifier]
+;; public class Customer
+;; {
+;;    // Fields, properties, methods and events go here...
+;; }
+
+;; inheritance:
+;; Unlike C++, a class in C# can only directly inherit from one base class
+;; public class Manager : Employee
+;; {
+;;     // Employee fields, properties, methods and events are inherited
+;;     // New Manager fields, properties, methods and events go here...
+;; }
+
+(defun parse-defclass (code emit)
+  ;; declass <name> ([<parent>]) [declaration*] form*
+  ;; if no declaration is given, access modifier is public by default
+  (destructuring-bind (name parent &rest body) (cdr code)
+    (multiple-value-bind (body state) (class-consume-declare body)
+      (with-output-to-string (s)
+	(let ((visibility "public"))
+	  (when (public-p state)
+	    (setf visibility "public"))
+	  (when (private-p state)
+	    (setf visibility "private"))
+	  (format s "~a class ~a ~@[ : ~a~]"
+		  visibility
+		  name
+		  (when parent
+		    (car parent))
+		  
+		  )
+	  (format s "~a" (funcall emit `(progn ,@body)))
+	  )
+	))))
+
 
 (defun parse-lambda (code emit)
   ;;  lambda lambda-list [declaration*] form*
@@ -593,7 +629,7 @@ switches Return body and state."
 			 (if hook-defclass
 			     (parse-defmethod code #'emit :class current-class :header-only t)
 			     (parse-defmethod code #'emit :class current-class :header-only nil)))
-		  (defun
+		  #+nil (defun
 		      (prog1
 			  (parse-defun code #'emit )
 					;(format t "defun ~a~%" (subseq code 0 (min 4 (length code))))

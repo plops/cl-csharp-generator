@@ -23,7 +23,7 @@
      (using System
 	    System.Drawing
 	    System.Windows.Forms)
-     (class HelloWorld (Form)
+     (defclass HelloWorld (Form)
 	    (declare (public))
 	    (defmethod Main ()
 	      (declare (static)
