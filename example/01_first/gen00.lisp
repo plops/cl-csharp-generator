@@ -31,6 +31,7 @@
 	      (Application.Run
 	       (new (HelloWorld))))
 	    (defmethod HelloWorld ()
+	      (declare (values :constructor))
 	      ;; C++ auto is var in C#
 	      (let ((b (new (Button))))
 		(setf b.Text (string "Click Me!"))

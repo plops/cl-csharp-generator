@@ -217,7 +217,7 @@ switches Return body and state."
 
 
 
-(defun parse-defmethod (code emit ;&key header-only (class nil)
+(defun parse-defmethod (code emit ;&key (class nil)
 			)
   ;; defun function-name lambda-list [declaration*] form*
   (destructuring-bind (name lambda-list &rest body) (cdr code)
@@ -229,7 +229,7 @@ switches Return body and state."
 	(declare (ignorable req-param opt-param res-param
 			    key-param other-key-p aux-param key-exist-p))
 	(with-output-to-string (s)
-	  (let ((visibility nil))
+	  (let ((visibility "public"))
 	    (when (public-p state)
 	      (setf visibility "public"))
 	    (when (private-p state)
@@ -248,7 +248,7 @@ switches Return body and state."
 			       r)
 			(if (car r)
 			    (case (car r)
-			      ;(:constructor "") ;; (values :constructor) will not print anything
+			      (:constructor "") ;; (values :constructor) will not print anything
 			      (t (car r)))
 			    "void")))
 		   ;; 3 name
