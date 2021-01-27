@@ -4,3 +4,5 @@
 sudo dnf install mono-devel
 #+end_example
 - https://www.youtube.com/watch?v=pwZpJzpE2lQ LEARN UNITY - The Most BASIC TUTORIAL I'll Ever Make
+- https://www.youtube.com/watch?v=Ml2UakwRxjk Getting Started With ARFoundation in Unity (ARKit, ARCore)
+  - 272,865 view 4 Jan 2019
