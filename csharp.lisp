@@ -1,8 +1,4 @@
-(declaim (optimize 
-	  (safety 3)
-	  (speed 0)
-	  (debug 3)))
-#-nil
+
 (progn
   (ql:quickload "alexandria")
   (ql:quickload "cl-ppcre")
@@ -334,7 +330,8 @@ switches Return body and state."
   ;; support for captures (placed into the first set of brackets)
   ;; (declare (capture &app bla)) will result in [&app, bla]
   (destructuring-bind (lambda-list &rest body) (cdr code)
-    (multiple-value-bind (body env captures constructs const-p) (consume-declare body)
+    (multiple-value-bind (body state ; env captures constructs const-p
+			  ) (method-consume-declare body)
       (multiple-value-bind (req-param opt-param res-param
 				      key-param other-key-p
 				      aux-param key-exist-p)
@@ -342,8 +339,8 @@ switches Return body and state."
 	(declare (ignorable req-param opt-param res-param
 			    key-param other-key-p aux-param key-exist-p))
 	(with-output-to-string (s)
-	  (format s "[~{~a~^,~}] ~a~@[-> ~a ~]"
-		  (mapcar emit captures)
+	  (format s "~a"
+		  ;(mapcar emit captures)
 		  (funcall emit `(paren
 				  ,@(loop for p in req-param collect
 					 (format nil "~a ~a"
@@ -354,11 +351,11 @@ switches Return body and state."
 							      p)))
 						 p
 						 ))))
-		  (let ((r (gethash 'return-values env)))
+		  #+nil (let ((r (gethash 'return-values env)))
 		    (if (< 1 (length r))
 			(funcall emit `(paren ,@r))
 			(car r))))
-	  (format s "~a" (funcall emit `(progn ,@body))))))))
+	  (format s "=> ~a" (funcall emit `(progn ,@body))))))))
 
 (defun print-sufficient-digits-f32 (f)
   "print a single floating point number as a string with a given nr. of                                                                                                                                             
@@ -435,6 +432,12 @@ switches Return body and state."
 		   ;; space {args}*
 		   (let ((args (cdr code)))
 		     (format nil "~{~a~^ ~}" (mapcar #'emit args))))
+		  (space-n
+		   ;; space-n {args}*
+		   ;; like space but no semicolon at the end
+		   (let ((args (cdr code)))
+		     (format nil "~{~a~^ ~}" (mapcar #'emit args))))
+		  
 		  (comments (let ((args (cdr code)))
                               (format nil "~{// ~a~%~}" args)))
 		  (paren
@@ -446,6 +449,11 @@ switches Return body and state."
 		     (format nil "<~{~a~^, ~}>" (mapcar #'emit args))))
 		  (bracket
 		   ;; bracket {args}*
+		   (let ((args (cdr code)))
+		     (format nil "[~{~a~^, ~}]" (mapcar #'emit args))))
+		  (bracket-n
+		   ;; bracket {args}*
+		   ;; like bracket but no semicolon at the end
 		   (let ((args (cdr code)))
 		     (format nil "[~{~a~^, ~}]" (mapcar #'emit args))))
 		  (curly
@@ -631,15 +639,15 @@ switches Return body and state."
 			   (format nil "(~{(~a)~^/~})" (mapcar #'emit args)))))
 		  
 		  (logior (let ((args (cdr code))) ;; py
-			    (format nil "(~{(~a)~^ | ~})" (mapcar #'emit args))))
+			    (format nil "(~{(~a)~^ || ~})" (mapcar #'emit args))))
 		  (logand (let ((args (cdr code))) ;; py
-			    (format nil "(~{(~a)~^ & ~})" (mapcar #'emit args))))
-		  (logxor (let ((args (cdr code))) ;; py
+			    (format nil "(~{(~a)~^ && ~})" (mapcar #'emit args))))
+		  (xor (let ((args (cdr code))) ;; py
 			    (format nil "(~{(~a)~^ ^ ~})" (mapcar #'emit args))))
 		  (or (let ((args (cdr code)))
-			(format nil "(~{(~a)~^||~})" (mapcar #'emit args))))
+			(format nil "(~{(~a)~^|~})" (mapcar #'emit args))))
 		  (and (let ((args (cdr code)))
-			 (format nil "(~{(~a)~^&&~})" (mapcar #'emit args))))
+			 (format nil "(~{(~a)~^&~})" (mapcar #'emit args))))
 		  (= (destructuring-bind (a b) (cdr code)
 		       ;; = pair
 		       (format nil "~a=~a" (emit a) (emit b))))
@@ -681,7 +689,7 @@ switches Return body and state."
 			      (format nil "(~a)-=(~a)" (emit a) (emit b))
 			      (format nil "(~a)--" (emit a)))))
 		  (string (format nil "\"~a\"" (cadr code)))
-		  (string-r (format nil "R\"(~a)\"" (cadr code)))
+		  (string-$ (format nil "$\"~a\"" (cadr code)))
 		  (string-u8 (format nil "u8\"(~a)\"" (cadr code)))
 		  (char (format nil "'~a'" (cadr code)))
 		  (hex (destructuring-bind (number) (cdr code)
