@@ -8,6 +8,11 @@
 ;; dotnet new console --framework net6.0
 ;; dotnet add package Avalonia
 
+;; dotnet new --install Avalonia.Templates
+;; dotnet new avalonia.app -o MyApp
+;; cd MyApp
+;; dotnet run
+
 ;; dotnet tool install -g NuGet.CommandLine
 ;; nuget install Avalonia -ProjectPath source.csproj
 
