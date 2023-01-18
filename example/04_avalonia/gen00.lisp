@@ -3,7 +3,13 @@
 
 (in-package :cl-csharp-generator)
 
+;; cd source
+;; dotnet --version => 6.0.405
 ;; dotnet new console --framework net6.0
+;; dotnet add package Avalonia
+
+;; dotnet tool install -g NuGet.CommandLine
+;; nuget install Avalonia -ProjectPath source.csproj
 
 (progn
   (defparameter *source-dir* #P"example/04_avalonia/source/")
@@ -21,14 +27,18 @@
        (using Avalonia
 	      Avalonia.Controls
 	      Avalonia.Markup.Xaml)
-       (namespace ,(format nil "~a" project)
+       (namespace MyApp			;,(format nil "~a" project)
 		  (defclass MainWindow (Window)
-		    (declare (public))
+		    (declare
+		     (public)
+		     )
 		    (defmethod MainWindow ()
 		      (declare 
-		       (public))
+		       (public)
+		       (values :constructor))
 		      (InitializeComponent)
-		      (this.AttachDevTools))
+					;(this.AttachDevTools)
+		      )
 	 
 		    (defmethod InitializeComponent ()
 		      (declare (private))

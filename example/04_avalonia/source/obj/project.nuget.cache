@@ -1,8 +1,20 @@
 {
   "version": 2,
-  "dgSpecHash": "UrxXEiK8cNJ0y82RX6C6mJH2CmcmEGlzOgXftoQXNBqdK1sZvT2orPioWubIhRGOe4Un01XVeqPrZlHOY03Vzw==",
+  "dgSpecHash": "cFKk3WYSDBL8UHjuXuRjvkTKthkRmsNV1Ohp93MkzNfNXm4G3RoygZjiwy8fkHkvyCpdb1SdLq6O1HjrYOF/hQ==",
   "success": true,
   "projectFilePath": "/home/martin/stage/cl-csharp-generator/example/04_avalonia/source/source.csproj",
-  "expectedPackageFiles": [],
+  "expectedPackageFiles": [
+    "/home/martin/.nuget/packages/avalonia/0.10.18/avalonia.0.10.18.nupkg.sha512",
+    "/home/martin/.nuget/packages/avalonia.remote.protocol/0.10.18/avalonia.remote.protocol.0.10.18.nupkg.sha512",
+    "/home/martin/.nuget/packages/jetbrains.annotations/10.3.0/jetbrains.annotations.10.3.0.nupkg.sha512",
+    "/home/martin/.nuget/packages/microsoft.netcore.platforms/1.0.1/microsoft.netcore.platforms.1.0.1.nupkg.sha512",
+    "/home/martin/.nuget/packages/microsoft.netcore.targets/1.0.1/microsoft.netcore.targets.1.0.1.nupkg.sha512",
+    "/home/martin/.nuget/packages/system.componentmodel.annotations/4.5.0/system.componentmodel.annotations.4.5.0.nupkg.sha512",
+    "/home/martin/.nuget/packages/system.memory/4.5.3/system.memory.4.5.3.nupkg.sha512",
+    "/home/martin/.nuget/packages/system.reactive/5.0.0/system.reactive.5.0.0.nupkg.sha512",
+    "/home/martin/.nuget/packages/system.runtime/4.1.0/system.runtime.4.1.0.nupkg.sha512",
+    "/home/martin/.nuget/packages/system.runtime.compilerservices.unsafe/4.6.0/system.runtime.compilerservices.unsafe.4.6.0.nupkg.sha512",
+    "/home/martin/.nuget/packages/system.valuetuple/4.5.0/system.valuetuple.4.5.0.nupkg.sha512"
+  ],
   "logs": []
 }

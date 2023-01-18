@@ -437,7 +437,11 @@ switches Return body and state."
 		   ;; like space but no semicolon at the end
 		   (let ((args (cdr code)))
 		     (format nil "~{~a~^ ~}" (mapcar #'emit args))))
-		  
+		  (namespace
+		   ;; namespace <name> {body}*
+		   (destructuring-bind (ns name &rest body) code
+		     (format nil "~a" (emit `(space-n namespace ,name
+						      (progn ,@body))))))
 		  (comments (let ((args (cdr code)))
                               (format nil "~{// ~a~%~}" args)))
 		  (paren
@@ -507,7 +511,7 @@ switches Return body and state."
 										let
 										split-header-and-code
 										defun defmethod defclass
-										space-n bracket-n))))
+										space-n namespace bracket-n))))
 						    ""
 						    ";"))))
 				  (cdr code)))
