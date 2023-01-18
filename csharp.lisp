@@ -506,7 +506,8 @@ switches Return body and state."
 										when if unless
 										let
 										split-header-and-code
-										defun defmethod defclass))))
+										defun defmethod defclass
+										space-n bracket-n))))
 						    ""
 						    ";"))))
 				  (cdr code)))
