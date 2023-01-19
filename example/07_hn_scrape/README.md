@@ -69,3 +69,56 @@
 }
 
 ```
+
+- now chatgpt:
+
+```
+
+Show C# code to scrape the main page news.ycombinator.com at every hour. Store the results in  a Postgres database.
+
+Here is an example of C# code that uses the HtmlAgilityPack library to scrape the main page of news.ycombinator.com and store the results in a Postgres database:
+
+
+using System;
+using System.Linq;
+using System.Net;
+using System.Threading;
+using HtmlAgilityPack;
+using Npgsql;
+
+class Program
+{
+    static void Main()
+    {
+        while (true)
+        {
+            // Scrape the website
+            var web = new HtmlWeb();
+            var doc = web.Load("https://news.ycombinator.com/");
+            var titles = doc.DocumentNode.SelectNodes("//td[@class='title']/a[@class='storylink']")
+                .Select(node => node.InnerText).ToList();
+
+            // Connect to Postgres
+            using (var conn = new NpgsqlConnection("Server=127.0.0.1;Port=5432;Database=mydb;User Id=myuser;Password=mypassword;"))
+            {
+                conn.Open();
+
+                // Insert the data
+                using (var cmd = new NpgsqlCommand())
+                {
+                    cmd.Connection = conn;
+                    foreach (var title in titles)
+                    {
+                        cmd.CommandText = $"INSERT INTO news (title) VALUES ('{title}')";
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+            }
+
+            // Wait for an hour before scraping again
+            Thread.Sleep(3600000);
+        }
+    }
+}
+
+```
