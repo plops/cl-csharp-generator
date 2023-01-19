@@ -8,7 +8,7 @@
 ;; dotnet new console --framework net6.0
 
 (progn
-  (defparameter *source-dir* #P"example/05_tcp_proto/source/")
+  (defparameter *source-dir* #P"example/06_tcp_proto/source/")
   (ensure-directories-exist (asdf:system-relative-pathname
 			     'cl-csharp-generator
 			     *source-dir*))
