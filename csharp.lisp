@@ -344,7 +344,7 @@ switches Return body and state."
 		  (funcall emit `(paren
 				  ,@(loop for p in req-param collect
 					 (format nil "~a ~a"
-						 (let ((type (gethash p env)))
+						 (let ((type (lookup-type p state)))
 						   (if type
 						       (funcall emit type)
 						       (break "can't find type for ~a in defun"
@@ -694,7 +694,11 @@ switches Return body and state."
 			      (format nil "(~a)-=(~a)" (emit a) (emit b))
 			      (format nil "(~a)--" (emit a)))))
 		  (string (format nil "\"~a\"" (cadr code)))
-		  (string-$ (format nil "$\"~a\"" (cadr code)))
+		  (string$ (format nil "$\"~a\"" (cadr code)))
+		  (string@ (format nil "@\"~a\"" (cl-ppcre:regex-replace-all
+						  "\""
+						  (cadr code)
+						  "\"\"")))
 		  (string-u8 (format nil "u8\"(~a)\"" (cadr code)))
 		  (char (format nil "'~a'" (cadr code)))
 		  (hex (destructuring-bind (number) (cdr code)
@@ -784,10 +788,13 @@ switches Return body and state."
 					 ,@body))))
 		  #-generic-c
 		  (foreach (destructuring-bind ((item collection) &rest body) (cdr code)
-			     (format nil "for (auto& ~a : ~a) ~a"
-				     (emit item)
-				     (emit collection)
-				     (emit `(progn ,@body)))))
+			    (multiple-value-bind (body state) (let-consume-declare body)
+			      (format nil "for (~a ~a : ~a) ~a"
+				      (or (lookup-type item state)
+					  "var")
+				      (emit item)
+				      (emit collection)
+				      (emit `(progn ,@body))))))
 		  #+generic-c
 		  (foreach
 		   (destructuring-bind ((item collection) &rest body) (cdr code)
