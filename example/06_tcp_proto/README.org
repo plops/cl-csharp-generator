@@ -37,3 +37,58 @@ public static void Main()
     }
 }
 #+end_example
+
+- client:
+
+#+begin_example
+
+Show C# code that connects to a TCP socket on a server. It sends packets that contain uint64 timecode and an int64 data value. The packet is encoded using protobuf.
+
+using System;
+using System.Net.Sockets;
+using System.Net;
+using ProtoBuf;
+
+[ProtoContract]
+class MyProtocol
+{
+    [ProtoMember(1)]
+    public UInt64 TimeCode { get; set; }
+    [ProtoMember(2)]
+    public Int64 Data { get; set; }
+}
+
+public static void Main()
+{
+   // Create a TCP/IP socket.
+   Socket sender = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+
+   // Connect the socket to the remote endpoint.
+   IPAddress ipAddress = IPAddress.Parse("127.0.0.1");
+   IPEndPoint remoteEP = new IPEndPoint(ipAddress, 11000);
+
+   sender.Connect(remoteEP);
+
+   // Create a message to be sent
+   MyProtocol message = new MyProtocol() { TimeCode = 123456789, Data = 123456789 };
+
+   // Serialize the message
+   byte[] messageBytes = Serialize(message);
+
+   // Send the message
+   int bytesSent = sender.Send(messageBytes);
+
+   // Release the socket.
+   sender.Shutdown(SocketShutdown.Both);
+   sender.Close();
+}
+
+private static byte[] Serialize<T>(T message)
+{
+   using (var stream = new MemoryStream())
+   {
+      Serializer.Serialize<T>(stream, message);
+      return stream.ToArray();
+   }
+}
+#+end_example
