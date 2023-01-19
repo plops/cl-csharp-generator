@@ -1,0 +1,47 @@
+#+begin_example
+
+Show C# code that opens a listens on a TCP socket for packets that contain uint64 timecode and an int64 data value. Print each packet.
+
+using System;
+using System.Net;
+using System.Net.Sockets;
+using System.Text;
+
+namespace TCPSocketExample
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            int port = 8080;
+            IPAddress localAddress = IPAddress.Any;
+
+            TcpListener listener = new TcpListener(localAddress, port);
+            listener.Start();
+
+            while (true)
+            {
+                Console.WriteLine("Waiting for a connection...");
+                TcpClient client = listener.AcceptTcpClient();
+
+                Console.WriteLine("Connected!");
+                NetworkStream stream = client.GetStream();
+
+                while (true)
+                {
+                    byte[] buffer = new byte[sizeof(UInt64) + sizeof(Int64)];
+                    int readSize = stream.Read(buffer, 0, buffer.Length);
+                    if (readSize == 0) 
+                    { 
+                        break; 
+                    }
+                    UInt64 timecode = BitConverter.ToUInt64(buffer, 0);
+                    Int64 data = BitConverter.ToInt64(buffer, sizeof(UInt64));
+                    Console.WriteLine("Timecode: {0}, Data: {1}", timecode, data);
+                }
+            }
+        }
+    }
+}
+
+#+end_example
