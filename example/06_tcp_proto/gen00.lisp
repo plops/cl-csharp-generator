@@ -6,6 +6,7 @@
 ;; mkdir source; cd source
 ;; dotnet --version => 6.0.405
 ;; dotnet new console --framework net6.0
+;; dotnet add package ProtoBuf
 
 (progn
   (defparameter *source-dir* #P"example/06_tcp_proto/source/")
@@ -53,7 +54,7 @@
 				 (let ((stream (client.GetStream))
 				       (packet (Serializer.Deserialize<ProtoBufPacket.Packet> stream)))
 				   (Console.WriteLine
-					      (string$ "Timecode={packet.Timecode} Data={packet.DataValue}"))
+				    (string$ "Timecode={packet.Timecode} Data={packet.DataValue}"))
 				   )))))))))))
 
 
