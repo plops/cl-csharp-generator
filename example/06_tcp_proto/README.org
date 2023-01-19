@@ -92,3 +92,97 @@ private static byte[] Serialize<T>(T message)
    }
 }
 #+end_example
+
+
+- chatgpt
+
+- Show C# code for TCP server and client. The client sends packets
+  that contain uint64 timecode and an int64 data value. The packet is
+  encoded using protobuf. The server prints incoming packets.
+
+- server
+#+begin_example
+
+using System;
+using System.Net;
+using System.Net.Sockets;
+using System.Threading;
+using ProtoBuf;
+
+[ProtoContract]
+public class Packet
+{
+    [ProtoMember(1)]
+    public ulong Timecode { get; set; }
+    [ProtoMember(2)]
+    public long Data { get; set; }
+}
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        TcpListener listener = new TcpListener(IPAddress.Any, 12345);
+        listener.Start();
+        while (true)
+        {
+            TcpClient client = listener.AcceptTcpClient();
+            Thread thread = new Thread(new ParameterizedThreadStart(HandleClient));
+            thread.Start(client);
+        }
+    }
+
+    static void HandleClient(object obj)
+    {
+        TcpClient client = (TcpClient)obj;
+        NetworkStream stream = client.GetStream();
+        while (true)
+        {
+            try
+            {
+                Packet packet = Serializer.DeserializeWithLengthPrefix<Packet>(stream, PrefixStyle.Fixed32);
+                Console.WriteLine("Timecode: " + packet.Timecode + ", Data: " + packet.Data);
+            }
+            catch (Exception) { break; }
+        }
+        client.Close();
+    }
+}
+
+
+#+end_example
+
+- client
+#+begin_example
+using System;
+using System.Net;
+using System.Net.Sockets;
+using ProtoBuf;
+
+[ProtoContract]
+public class Packet
+{
+    [ProtoMember(1)]
+    public ulong Timecode { get; set; }
+    [ProtoMember(2)]
+    public long Data { get; set; }
+}
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        TcpClient client = new TcpClient();
+        client.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 12345));
+        NetworkStream stream = client.GetStream();
+        while (true)
+        {
+            Packet packet = new Packet { Timecode = (ulong)DateTime.Now.Ticks, Data = DateTime.Now.Millisecond };
+            Serializer.SerializeWithLengthPrefix(stream, packet, PrefixStyle.Fixed32);
+            Thread.Sleep(1000);
+        }
+    }
+}
+
+
+#+end_example
