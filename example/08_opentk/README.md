@@ -89,3 +89,80 @@ class Game : GameWindow
 
 
 ```
+
+
+
+
+Show .NET core code for Linux that creates a Window with Imgui.Net and
+draws a circle. Show a widget that controls the diameter of the
+circle.
+
+
+
+```
+using ImGuiNET;
+using OpenTK;
+using OpenTK.Graphics.OpenGL;
+
+class Program
+{
+    private static float _circleDiameter = 100.0f;
+
+    static void Main(string[] args)
+    {
+        using (var window = new GameWindow())
+        {
+            // Initialize ImGui
+            ImGui.CreateContext();
+            var io = ImGui.GetIO();
+            io.ConfigFlags |= ImGuiConfigFlags.NavEnableKeyboard;
+            ImGui.StyleColorsDark();
+
+            window.Load += (sender, e) =>
+            {
+                // Set up OpenGL
+                GL.ClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+                GL.Enable(EnableCap.Blend);
+                GL.BlendFunc(BlendingFactorSrc.SrcAlpha, BlendingFactorDest.OneMinusSrcAlpha);
+            };
+
+            window.Resize += (sender, e) =>
+            {
+                io.DisplaySize = new Vector2(window.Width, window.Height);
+            };
+
+            window.UpdateFrame += (sender, e) =>
+            {
+                // Start the ImGui frame
+                ImGui.NewFrame();
+
+                // Create the window
+                ImGui.Begin("Circle Control");
+                ImGui.SliderFloat("Diameter", ref _circleDiameter, 50.0f, 200.0f);
+                ImGui.End();
+
+                // Render the ImGui frame
+                ImGui.Render();
+            };
+
+            window.RenderFrame += (sender, e) =>
+            {
+                GL.Viewport(0, 0, window.Width, window.Height);
+                GL.Clear(ClearBufferMask.ColorBufferBit);
+
+                // Draw the circle
+                ImGui.GetBackgroundDrawList().AddCircleFilled(new Vector2(window.Width / 2, window.Height / 2), _circleDiameter / 2, 0xFFFFFFFF);
+
+                // Render the ImGui draw lists
+                ImGui.Render();
+
+                window.SwapBuffers();
+            };
+
+            window.Run();
+        }
+    }
+}
+
+
+```
