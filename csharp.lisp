@@ -344,11 +344,11 @@ switches Return body and state."
 		  (funcall emit `(paren
 				  ,@(loop for p in req-param collect
 					 (format nil "~a ~a"
-						 (let ((type (lookup-type p state)))
+						 (let ((type (lookup-type p   :state state
+									  )))
 						   (if type
 						       (funcall emit type)
-						       (break "can't find type for ~a in defun"
-							      p)))
+						       ""))
 						 p
 						 ))))
 		  #+nil (let ((r (gethash 'return-values env)))
@@ -790,7 +790,7 @@ switches Return body and state."
 		  (foreach (destructuring-bind ((item collection) &rest body) (cdr code)
 			    (multiple-value-bind (body state) (let-consume-declare body)
 			      (format nil "for (~a ~a : ~a) ~a"
-				      (or (lookup-type item state)
+				      (or (lookup-type item :state state)
 					  "var")
 				      (emit item)
 				      (emit collection)
