@@ -6,14 +6,14 @@
 ;; mkdir source; cd source
 ;; dotnet --version => 6.0.405
 ;; dotnet new console --framework net6.0
-;; dotnet add package ProtoBuf
+;; dotnet add package Grpc.AspNetCore
 
 (progn
-  (defparameter *source-dir* #P"example/06_tcp_proto/source/")
+  (defparameter *source-dir* #P"example/09_grpc/source/")
   (ensure-directories-exist (asdf:system-relative-pathname
 			     'cl-csharp-generator
 			     *source-dir*))
-  (let ((project "TCPProtoBufExample"))
+  (let ((project "grpcExample"))
     (write-source
      (asdf:system-relative-pathname
       'cl-csharp-generator
@@ -59,7 +59,33 @@
 		      (declare (type IServiceCollection services)
 			       (public))
 		      (services.AddGrpc))
-		      ))))))
+
+		    (defmethod Configure (app env)
+		      (declare (type IApplicationBuilder app)
+			       (type IWebHostEnvironment env)
+			       (public))
+		      (if (env.IsDevelopment)
+			  (app.UseDeveloperExceptionPage)
+			  )
+		      (app.UseRouting)
+		      (app.UseEndpoints (lambda (endpoints)
+					  (dot endpoints
+					       (MapGrpcService<MyServiceImpl>)
+					       (EnableGrpcWeb)))))
+		    
+		      )
+
+
+		  (defclass MyServiceImpl (MyService.MyService.MyServiceBase)
+		    (declare (public))
+		    (defmethod SayHello (request context)
+		      (declare (public) (override)
+			       (values Task<HelloReply>)
+			       (type HelloRequest request)
+			       (type ServerCallContext context))
+		      (return (Task.FromResult
+			       (new HelloReply (progn
+						 (space-n (string$ "Hello {request.Name}")))))))))))))
 
 
 

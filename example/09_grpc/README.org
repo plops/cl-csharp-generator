@@ -44,3 +44,37 @@ You can check the service is running by visiting http://localhost:5000
 
 You now have an ASP.NET Core gRPC server project set up and ready to go. You can add more gRPC services and start building your gRPC server.
 #+end_example
+
+
+
+- chatgpt is quite clever, with a few examples it can understand my
+  s-expressions:
+
+#+begin_example
+Describe the operators of my s-expression representation for C#.
+￼
+It looks like your s-expression representation for C# is similar to the one used in LISP and Scheme programming languages, where the basic building blocks of the language are organized as a tree-like structure called S-expression (Symbolic Expression).
+
+The basic operators in your s-expression representation for C# are:
+
+defmethod: defines a method and takes two arguments, the method name and the list of expressions that forms the body of the method.
+
+declare: declares the type of the arguments and the return type of the method, and it can also have other attributes like public, static, and values.
+
+let : declares a variable and assigns it a value.
+
+if: takes a test expression and two lists of expressions and it will execute the first list if the test expression is true, otherwise, the second list will be executed.
+
+return: returns a value from a method
+
+lambda : used to define anonymous function
+
+. : used to access properties and methods of an object.
+
+< and > : used to specify the type of a generic class or method.
+
+() : used to group expressions and to call methods and to access the properties.
+
+Please note that this is not an official representation of C# in the form of S-expression, the operators and functionality may not be an exact match with the C# language itself, but rather an abstraction to represent C# code in the form of S-expression.
+
+#+end_example
