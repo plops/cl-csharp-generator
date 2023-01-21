@@ -246,3 +246,45 @@ syntax.
 
 
 - too bad.  chatgpt is not able to write proper handling of declare and let
+
+- now try the opposite:
+
+- Q: Show code that converts C# to s-expressions.
+
+- A: Here is an example of a Common Lisp function that converts a C#
+  code string to an s-expression representation:
+
+#+begin_example
+(defun convert-to-sexp (code)
+  (let ((lines (split-string code "\n")))
+    (loop for line in lines
+          collect (cond
+                   ((string-match "^using \\(.+\\);$" line)
+                    (list 'using (match-string 1 line)))
+                   ((string-match "^var \\(.+\\) = \\(.+\\);$" line)
+                    (list 'let (match-string 1 line) (match-string 2 line)))
+                   ((string-match "^\\(.+\\).\\(.+\\)(\\(.+\\));$" line)
+                    (list 'dot (match-string 1 line) (match-string 2 line) (match-string 3 line)))
+                   ((string-match "^\\(.+\\)(\\(.+\\));$" line)
+                    (list (match-string 1 line) (match-string 2 line)))
+                   ((string-match "^\\(.+\\) \\(.+\\);$" line)
+                    (list (match-string 1 line) (match-string 2 line)))
+                   (t line)))))
+
+#+end_example
+
+-  This function uses the split-string function to break the input C#
+  code string into lines and then uses a loop to process each
+  line. Within the loop, it uses string-match to match different
+  patterns of C# statements and convert them to s-expression
+  representation.
+- It uses a series of cond statements to check different patterns of
+  C# code and converts them to the corresponding s-expression
+  representation. As with the other example, this is a simple example
+  that could be improved and extended to handle more complex C# code
+  cases, it also assumes that the input C# code is already well-formed
+  and adheres to the s-expression syntax.
+
+
+- my comment: i think this is quite useless. but interesting that it
+  expresses the code in common lisp rather than python
