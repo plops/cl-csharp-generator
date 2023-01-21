@@ -3,9 +3,9 @@
 
 #+begin_example
 
-￼
+
 Show how to use `dotnet` to initialize a project for a AspNetCore gRPC server.
-￼
+
 You can use the following steps to initialize a project for an ASP.NET Core gRPC server using the dotnet command-line interface:
 
 Create a new directory for your project: mkdir MyGrpcServer
@@ -77,4 +77,56 @@ lambda : used to define anonymous function
 
 Please note that this is not an official representation of C# in the form of S-expression, the operators and functionality may not be an exact match with the C# language itself, but rather an abstraction to represent C# code in the form of S-expression.
 
+#+end_example
+
+
+- have chatgpt modify the dotnet template grpc server code to run
+  without encryption:
+
+#+begin_example
+
+
+Modify the following C# code, so that the gRPC server is insecure and unencrypted. It should not require the client to have a certificate and communication should occur in plain text, so that I can see and dissect the protocol with Wireshark.
+
+using source.Services;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Additional configuration is required to successfully run gRPC on macOS.
+// For instructions on how to configure Kestrel and gRPC clients on macOS, visit https://go.microsoft.com/fwlink/?linkid=2099682
+
+// Add services to the container.
+builder.Services.AddGrpc();
+
+var app = builder.Build();
+
+// Configure the HTTP request pipeline.
+app.MapGrpcService<GreeterService>();
+app.MapGet("/", () => "Communication with gRPC endpoints must be made through a gRPC client. To learn how to create a client, visit: https://go.microsoft.com/fwlink/?linkid=2086909");
+
+app.Run();
+using source.Services;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Additional configuration is required to successfully run gRPC on macOS.
+// For instructions on how to configure Kestrel and gRPC clients on macOS, visit https://go.microsoft.com/fwlink/?linkid=2099682
+
+// Add services to the container.
+builder.Services.AddGrpc(options =>
+{
+options.Credentials = ChannelCredentials.Insecure;
+});
+
+var app = builder.Build();
+
+// Configure the HTTP request pipeline.
+app.MapGrpcService<GreeterService>();
+app.MapGet("/", () => "Communication with gRPC endpoints must be made through a gRPC client. To learn how to create a client, visit: https://go.microsoft.com/fwlink/?linkid=2086909");
+
+app.Run();
+
+You can remove the following line
+"// Additional configuration is required to successfully run gRPC on macOS.
+// For instructions on how to configure Kestrel and gRPC clients on macOS, visit https://go.microsoft.com/fwlink/?linkid=2099682"
 #+end_example
