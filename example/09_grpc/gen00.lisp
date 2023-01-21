@@ -64,6 +64,21 @@
 	      HelloReply
 	      (progn
 		(space string (setf message 1))))))
+  (write-source
+     (asdf:system-relative-pathname
+      'cl-csharp-generator
+      (merge-pathnames
+       "Program.cs"
+       *source-dir*))
+     `(do0
+       (using source.Services)
+       (let ((builder (WebApplication.CreateBuilder args)))
+	 (dot (builder.Services) (AddGrpc (lambda (options)
+					    (= options.Credentials ChannelCredentials.Insecure))))
+	 (let ((app (dot builder Build)))
+	   (dot app (MapGrpcService<GreeterService>))
+	   (dot app (MapGet "/" (lambda () "Communication with gRPC endpoints must be made through a gRPC client. To learn how to create a client, visit: https://go.microsoft.com/fwlink/?linkid=2086909")))
+	   (dot app Run)))))
   (let ((project "grpcExample"))
     (write-source
      (asdf:system-relative-pathname
