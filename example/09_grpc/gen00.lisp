@@ -13,31 +13,57 @@
   (ensure-directories-exist (asdf:system-relative-pathname
 			     'cl-csharp-generator
 			     *source-dir*))
+  (with-open-file (s (asdf:system-relative-pathname
+		      'cl-csharp-generator
+		      (merge-pathnames
+		       "source.csproj"
+		       *source-dir*))
+		     :direction :output
+		     :if-exists :supersede)
+
+    (format s "<Project Sdk=\"Microsoft.NET.Sdk.Web\">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Protobuf Include=\"Protos\greet.proto\" GrpcServices=\"Server\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include=\"Grpc.AspNetCore\" Version=\"2.40.0\" />
+  </ItemGroup>
+
+</Project>
+"))
   (write-source
-     (asdf:system-relative-pathname
-      'cl-csharp-generator
-      (merge-pathnames
-       "greet.proto"
-       *source-dir*))
-     `(do0
-       (setf syntax (string "proto3"))
-       (space option (setf csharp_namespace
-			   (string "GrpcGreeter")))
-       (space package greet)
-       (space-n service
-		Greeter
-		(progn
-		  (space rpc
-			 (SayHello HelloRequest)
-			 (returns HelloReply))))
-       (space-n message
-		HelloRequest
-		(progn
-		  (space string (setf name 1))))
-       (space-n message
-		HelloReply
-		(progn
-		  (space string (setf message 1))))))
+   (asdf:system-relative-pathname
+    'cl-csharp-generator
+    (merge-pathnames
+     "greet.proto"
+     *source-dir*))
+   `(do0
+     (setf syntax (string "proto3"))
+     (space option (setf csharp_namespace
+			 (string "GrpcGreeter")))
+     (space package greet)
+     (space-n service
+	      Greeter
+	      (progn
+		(space rpc
+		       (SayHello HelloRequest)
+		       (returns HelloReply))))
+     (space-n message
+	      HelloRequest
+	      (progn
+		(space string (setf name 1))))
+     (space-n message
+	      HelloReply
+	      (progn
+		(space string (setf message 1))))))
   (let ((project "grpcExample"))
     (write-source
      (asdf:system-relative-pathname
