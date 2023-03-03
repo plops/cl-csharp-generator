@@ -511,7 +511,9 @@ switches Return body and state."
 										let
 										split-header-and-code
 										defun defmethod defclass
-										space-n namespace bracket-n))))
+										space-n namespace bracket-n
+										comments 
+										handler-case progn foreach))))
 						    ""
 						    ";"))))
 				  (cdr code)))
@@ -789,7 +791,7 @@ switches Return body and state."
 		  #-generic-c
 		  (foreach (destructuring-bind ((item collection) &rest body) (cdr code)
 			    (multiple-value-bind (body state) (let-consume-declare body)
-			      (format nil "for (~a ~a : ~a) ~a"
+			      (format nil "foreach (~a ~a in ~a) ~a"
 				      (or (lookup-type item :state state)
 					  "var")
 				      (emit item)
