@@ -34,9 +34,7 @@ class Program
             builder.SetMinimumLevel(Enum.Parse<LogLevel>(debuglevel ?? "Information"));
         });
 
-        ILogger<Program> logger =
-
-loggerFactory.CreateLogger<Program>();
+        ILogger<Program> logger = loggerFactory.CreateLogger<Program>();
 
         logger.LogInformation($"Executable: {executable}");
         logger.LogInformation($"Log File: {logfile}");
