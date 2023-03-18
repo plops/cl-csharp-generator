@@ -3,6 +3,18 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 namespace LogConf
 {
+    public interface IConfig
+    {
+        string Executable { get; }
+        string LogFile { get; }
+        string DebugLevel { get; }
+    }
+    public class Config : IConfig
+    {
+        public string? Executable { get; set; }
+        public string? LogFile { get; set; }
+        public string? DebugLevel { get; set; }
+    }
     public class Program
     {
         public static IServiceProvider BuildServiceProvider()
@@ -17,7 +29,8 @@ namespace LogConf
         }
         public static void Main(string[] args)
         {
-            Console.WriteLine($"code generation on: 11:09:47 of Saturday, 2023-03-18 (GMT+1)");
+            Console.WriteLine($"code generation on: 11:27:19 of Saturday, 2023-03-18 (GMT+1)");
+            var configuration = new ConfigurationBuilder().AddJsonFile("appSettings.json", optional: false).Build();
             var serviceProvider = BuildServiceProvider();
         }
     }

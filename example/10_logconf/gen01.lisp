@@ -92,60 +92,98 @@
 		    (out "<PrivateAssets>all</PrivateAssets>")
 		    (out "</PackageReference>")))
 	  (out "</ItemGroup>"))
+
+	(progn
+	  (out "<ItemGroup>")
+	  (out "<None Include=\"appSettings.json\" CopyToOutputDirectory=\"PreserveNewest\" />")
+	  (out "</ItemGroup>"))
 	(out "</Project>"))))
 
-  (let ((name 'Program))
-    (write-source
-     (merge-pathnames
-      (format nil "~a.cs" name)
-      *source-dir*)
+  (let ((l-conf `((:name executable :short x :type string :default (string "/usr/bin/ls") :required nil)
+		  (:name log-file :short f :type string :default (string "") :required nil)
+		  (:name debug-level :short l :type string :default (string "") :required nil)
+		  ;(:name config-file :short c :type string :default (string "") :required nil :config nil)
+		  ;(:name help :short h :type flag :default false :required nil :config nil)
+		  )
+		))
+   (let ((name 'Program))
+     (write-source
+      (merge-pathnames
+       (format nil "~a.cs" name)
+       *source-dir*)
      
-     `(do0
-       (using	Microsoft.Extensions.Configuration
+      `(do0
+	(using	Microsoft.Extensions.Configuration
 		Microsoft.Extensions.Logging
 		Microsoft.Extensions.DependencyInjection)
-       (do0
-	(namespace
-	 ,(format nil "~a" project)
-	 (defclass ,name ()
+	(do0
+	 (namespace
+	  ,(format nil "~a" project)
 
-	   (defmethod BuildServiceProvider ()
-	     (declare (static)
-		      (values IServiceProvider))
-	     (let ((collection (new (ServiceCollection))))
-	       (comments
+	  (do0
+	   (space-n
+	    public interface IConfig
+	    (progn
+	      ,@(loop for e in l-conf
+		      collect
+		      (destructuring-bind (&key name short type default required (config t)) e
+			(format nil "~a ~a { get; }"
+				type
+				(cl-change-case:pascal-case (format nil "~a" name)))))))
+	   (defclass Config (IConfig)
+	     (declare (public))
+	     ,@(loop for e in l-conf
+		     collect
+		     (destructuring-bind (&key name short type default required (config t)) e
+		       (format nil "public ~a ~a { get; set; }"
+			       type
+			       (cl-change-case:pascal-case (format nil "~a" name)))))))
+	  
+	  (defclass ,name ()
 
-		"In this C# project, the `ServiceProvider` is used to facilitate dependency injection. Essentially, services are considered dependencies and can be added to the service collection with different lifetimes. 
+	    
+
+	    (defmethod BuildServiceProvider ()
+	      (declare (static)
+		       (values IServiceProvider))
+	      (let ((collection (new (ServiceCollection))))
+		(comments
+
+		 "In this C# project, the `ServiceProvider` is used to facilitate dependency injection. Essentially, services are considered dependencies and can be added to the service collection with different lifetimes. 
 
 There are three types of lifetimes available: `scoped`, `transient`, and `singleton`. 
 
 - `transient` means that a new instance of the service is created every time it is requested from the `ServiceProvider`. 
 - `scoped` means that the same instance of the service is returned within a specific scope defined by `using (var scope = serviceProvider.CreateScope()) {...}`, but different instances are returned in other scopes. 
 - `singleton` always returns the same instance of the service. It is important to note that any operations performed by the singleton service must be thread-safe."
-		#+nil
-		"services are dependencies. we can add to the service collection as scoped, transient or singleton. these define their lifetimes. transient means you get a new everytime you request one from the service provider. scoped are giving the same instance inside `using (var scope= serviceProvider.CreateScope()) {...}`, but different instances in other scopes. singleton always returns the same instance. note that everything the singleton service does must be thread safe.")
+		 )
 	       
-	       (return (collection.BuildServiceProvider))))
-	   (defmethod Main (args)
-	     (declare (type "string[]" args)
-		      (static))
-	     (do0
-	      ,(lprint :msg (multiple-value-bind
-				  (second minute hour date month year day-of-week dst-p tz)
-				(get-decoded-time)
-			      (declare (ignorable dst-p))
-			      (format nil "code generation on: ~2,'0d:~2,'0d:~2,'0d of ~a, ~d-~2,'0d-~2,'0d (GMT~@d)"
-				      hour
-				      minute
-				      second
-				      (nth day-of-week *day-names*)
-				      year
-				      month
-				      date
-				      (- tz))))
-	      (let ((serviceProvider (BuildServiceProvider))))
+		(return (collection.BuildServiceProvider))))
+	    (defmethod Main (args)
+	      (declare (type "string[]" args)
+		       (static))
+	      (do0
+	       ,(lprint :msg (multiple-value-bind
+				   (second minute hour date month year day-of-week dst-p tz)
+				 (get-decoded-time)
+			       (declare (ignorable dst-p))
+			       (format nil "code generation on: ~2,'0d:~2,'0d:~2,'0d of ~a, ~d-~2,'0d-~2,'0d (GMT~@d)"
+				       hour
+				       minute
+				       second
+				       (nth day-of-week *day-names*)
+				       year
+				       month
+				       date
+				       (- tz))))
+
+	       (let ((configuration (new (dot (ConfigurationBuilder)
+					      (AddJsonFile (string "appSettings.json")
+							   "optional: false")
+					      (Build))))))
+	       (let ((serviceProvider (BuildServiceProvider))))
 	      
-	      ))))))))
+	       )))))))))
   
   (sb-ext:run-program "/usr/bin/dotnet"
 		      `("format")
