@@ -80,6 +80,7 @@
 			   (:name Microsoft.Extensions.Configuration.Binder :version 7.0.0)
 			   (:name Microsoft.Extensions.Logging :version 7.0.0)
 			   (:name Microsoft.Extensions.Logging.Console :version 7.0.0)
+			   (:name Microsoft.Extensions.DependencyInjection :version 7.0.0)
 			   )
 		do
 		   (destructuring-bind (&key name version) e
@@ -101,11 +102,18 @@
      
      `(do0
        (using	Microsoft.Extensions.Configuration
-		Microsoft.Extensions.Logging)
+		Microsoft.Extensions.Logging
+		Microsoft.Extensions.DependencyInjection)
        (do0
 	(namespace
 	 ,(format nil "~a" project)
 	 (defclass ,name ()
+
+	   (defmethod BuildServiceProvider ()
+	     (declare (static)
+		      (values IServiceProvider))
+	     (let ((collection (new (ServiceCollection))))
+	       (return (collection.BuildServiceProvider))))
 	   (defmethod Main (args)
 	     (declare (type "string[]" args)
 		      (static))
