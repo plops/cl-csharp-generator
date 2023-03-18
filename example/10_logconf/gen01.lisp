@@ -157,7 +157,13 @@ There are three types of lifetimes available: `scoped`, `transient`, and `single
 - `scoped` means that the same instance of the service is returned within a specific scope defined by `using (var scope = serviceProvider.CreateScope()) {...}`, but different instances are returned in other scopes. 
 - `singleton` always returns the same instance of the service. It is important to note that any operations performed by the singleton service must be thread-safe."
 		 )
-	       
+
+		(let ((configuration (new (dot (ConfigurationBuilder)
+					      (AddJsonFile (string "appSettings.json")
+							   "optional: false")
+					      (Build))))))
+		(space IConfig (= config null))
+		(collection.AddSingleton<IConfig> config)
 		(return (collection.BuildServiceProvider))))
 	    (defmethod Main (args)
 	      (declare (type "string[]" args)
@@ -177,10 +183,7 @@ There are three types of lifetimes available: `scoped`, `transient`, and `single
 				       date
 				       (- tz))))
 
-	       (let ((configuration (new (dot (ConfigurationBuilder)
-					      (AddJsonFile (string "appSettings.json")
-							   "optional: false")
-					      (Build))))))
+	       
 	       (let ((serviceProvider (BuildServiceProvider))))
 	      
 	       )))))))))
