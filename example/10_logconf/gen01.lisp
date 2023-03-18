@@ -7,7 +7,7 @@
 (in-package :cl-csharp-generator)
 
 (let ((project "LogConf"))
-  (defparameter *relative-source-dir* #P"example/10_logconf/source01/")
+  (defparameter *relative-source-dir* #P"example/10_logconf/source01/LogConf/")
   (defparameter *source-dir* (asdf:system-relative-pathname
 			     'cl-csharp-generator
 			     *relative-source-dir*))
@@ -74,10 +74,10 @@
 	  (loop for e in `(  ;(:name Google.Protobuf :version 3.22.00)
 					;(:name Grpc.Net.Client :version 2.51.0)
 					;(:name CommandLineParser :version 2.9.1)
-			   (:name Microsoft.Extensions :version 7.0.0)
-			   (:name Microsoft.Extensions.CommandLine :version 7.0.0)
-			   (:name Microsoft.Extensions.Json :version 7.0.0)
-			   (:name Microsoft.Extensions.Binder :version 7.0.0)
+			   (:name Microsoft.Extensions.Configuration :version 7.0.0)
+			   (:name Microsoft.Extensions.Configuration.CommandLine :version 7.0.0)
+			   (:name Microsoft.Extensions.Configuration.Json :version 7.0.0)
+			   (:name Microsoft.Extensions.Configuration.Binder :version 7.0.0)
 			   (:name Microsoft.Extensions.Logging :version 7.0.0)
 			   (:name Microsoft.Extensions.Logging.Console :version 7.0.0)
 			   )
