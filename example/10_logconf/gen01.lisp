@@ -138,18 +138,27 @@
 		       (format nil "public ~a ~a { get; set; }"
 			       type
 			       (cl-change-case:pascal-case (format nil "~a" name)))))))
+	  (defclass Processor ()
+	    "private readonly IConfig _config;"
+	    (defmethod Processor (config)
+	      (declare (type IConfig config)
+		       (values :constructor))
+	      (setf _config config))
+	    (defmethod Process ()
+	      ,(lprint :vars `(_config.Executable))))
 	  
 	  (defclass ,name ()
 
 	    
-
-	    (defmethod BuildServiceProvider ()
+	    
+	    (defmethod BuildServiceProvider (args)
 	      (declare (static)
+		       (type "string[]" args)
 		       (values IServiceProvider))
 	      (let ((collection (new (ServiceCollection))))
 		(comments
 
-		 "In this C# project, the `ServiceProvider` is used to facilitate dependency injection. Essentially, services are considered dependencies and can be added to the service collection with different lifetimes. 
+		 "In this C# project, the `ServiceProvider` is used to facilitate dependency injection. Essentially, services are considered dependencies and can be added to the service collection with different lifetimes. The `ServiceProvider` will look at the available constructors on the thing you are requesting.
 
 There are three types of lifetimes available: `scoped`, `transient`, and `singleton`. 
 
@@ -159,11 +168,13 @@ There are three types of lifetimes available: `scoped`, `transient`, and `single
 		 )
 
 		(let ((configuration (new (dot (ConfigurationBuilder)
-					      (AddJsonFile (string "appSettings.json")
-							   "optional: false")
-					      (Build))))))
+					       (AddJsonFile (string "appSettings.json")
+							    "optional: false")
+					       (AddCommandLine args)
+					       (Build))))))
 		(space IConfig (= config (configuration.Get<Config> )))
 		(collection.AddSingleton<IConfig> config)
+		(collection.AddSingleton<Processor>)
 		(return (collection.BuildServiceProvider))))
 	    (defmethod Main (args)
 	      (declare (type "string[]" args)
@@ -184,7 +195,11 @@ There are three types of lifetimes available: `scoped`, `transient`, and `single
 				       (- tz))))
 
 	       
-	       (let ((serviceProvider (BuildServiceProvider))))
+	       (let ((serviceProvider (BuildServiceProvider args))
+		     (p (serviceProvider.GetService<Processor>))
+		     )
+		 (p.Process)
+		 )
 	      
 	       )))))))))
   
