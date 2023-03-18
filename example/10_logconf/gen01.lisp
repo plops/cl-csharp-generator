@@ -138,14 +138,30 @@
 		       (format nil "public ~a ~a { get; set; }"
 			       type
 			       (cl-change-case:pascal-case (format nil "~a" name)))))))
+
+	  (do0
+	   (space-n
+	    public interface ILogger
+	    (progn
+	      (space void (Log "string message"))))
+	   
+	   (defclass Logger (ILogger)
+	     (declare (public))
+	     (defmethod Log (message)
+	       (declare (type string message))
+	       (Console.WriteLine (string$ "[{DateTime.Now.ToShortTimeString()}] {message}")))))
 	  (defclass Processor ()
 	    "private readonly IConfig _config;"
-	    (defmethod Processor (config)
+	    "private readonly ILogger _logger;"
+	    (defmethod Processor (config logger)
 	      (declare (type IConfig config)
+		       (type ILogger logger)
 		       (values :constructor))
-	      (setf _config config))
+	      (setf _config config
+		    _logger logger))
 	    (defmethod Process ()
-	      ,(lprint :vars `(_config.Executable))))
+	      ,(lprint :vars `(_config.Executable))
+	      (_logger.Log (string$ "DebugLevel={_config.DebugLevel}"))))
 	  
 	  (defclass ,name ()
 
@@ -174,6 +190,7 @@ There are three types of lifetimes available: `scoped`, `transient`, and `single
 					       (Build))))))
 		(space IConfig (= config (configuration.Get<Config> )))
 		(collection.AddSingleton<IConfig> config)
+		(dot collection ("AddTransient<ILogger,Logger>"))
 		(collection.AddSingleton<Processor>)
 		(return (collection.BuildServiceProvider))))
 	    (defmethod Main (args)

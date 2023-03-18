@@ -15,16 +15,30 @@ namespace LogConf
         public string LogFile { get; set; }
         public string DebugLevel { get; set; }
     }
+    public interface ILogger
+    {
+        void Log(string message);
+    }
+    public class Logger : ILogger
+    {
+        public void Log(string message)
+        {
+            Console.WriteLine($"[{DateTime.Now.ToShortTimeString()}] {message}");
+        }
+    }
     public class Processor
     {
         private readonly IConfig _config;
-        public Processor(IConfig config)
+        private readonly ILogger _logger;
+        public Processor(IConfig config, ILogger logger)
         {
             _config = config;
+            _logger = logger;
         }
         public void Process()
         {
             Console.WriteLine($" _config.Executable='{_config.Executable}'");
+            _logger.Log($"DebugLevel={_config.DebugLevel}");
         }
     }
     public class Program
@@ -40,12 +54,13 @@ namespace LogConf
             var configuration = new ConfigurationBuilder().AddJsonFile("appSettings.json", optional: false).AddCommandLine(args).Build();
             IConfig config = configuration.Get<Config>();
             collection.AddSingleton<IConfig>(config);
+            collection.AddTransient<ILogger, Logger>();
             collection.AddSingleton<Processor>();
             return collection.BuildServiceProvider();
         }
         public static void Main(string[] args)
         {
-            Console.WriteLine($"code generation on: 11:48:18 of Saturday, 2023-03-18 (GMT+1)");
+            Console.WriteLine($"code generation on: 11:59:01 of Saturday, 2023-03-18 (GMT+1)");
             var serviceProvider = BuildServiceProvider(args);
             var p = serviceProvider.GetService<Processor>();
             p.Process();
