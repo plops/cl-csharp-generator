@@ -162,7 +162,7 @@ There are three types of lifetimes available: `scoped`, `transient`, and `single
 					      (AddJsonFile (string "appSettings.json")
 							   "optional: false")
 					      (Build))))))
-		(space IConfig (= config null))
+		(space IConfig (= config (configuration.Get<Config> )))
 		(collection.AddSingleton<IConfig> config)
 		(return (collection.BuildServiceProvider))))
 	    (defmethod Main (args)
