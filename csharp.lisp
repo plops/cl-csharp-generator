@@ -443,7 +443,12 @@ switches Return body and state."
 		     (format nil "~a" (emit `(space-n namespace ,name
 						      (progn ,@body))))))
 		  (comments (let ((args (cdr code)))
-                              (format nil "~{// ~a~%~}" args)))
+			      (with-output-to-string (s)
+			       (loop for arg in args
+				     do
+					(format s "~{// ~a~%~}"
+						(cl-ppcre:split "\\n+" arg))))
+                              ))
 		  (paren
 		   ;; paren {args}*
 		   (let ((args (cdr code)))
@@ -932,4 +937,7 @@ switches Return body and state."
 			#+nil (format str "(~a)" (print-sufficient-digits-f64 code)))))))
 	  "")))
   )
+
+
+ 
 
