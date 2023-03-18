@@ -1,0 +1,6 @@
+
+- this code reads parameters from config file or commandline interface
+- unfortunately it doesn't construct and print the usage/help of the
+  command line params
+
+https://youtu.be/6dXb4oF1rZA dependency injection seems nice (to pass logger around)
