@@ -115,7 +115,7 @@ namespace LogConf
         }
         public static void Main(string[] args)
         {
-            Console.WriteLine($"code generation on: 23:11:45 of Sunday, 2023-03-19 (GMT+1)");
+            Console.WriteLine($"code generation on: 23:15:17 of Sunday, 2023-03-19 (GMT+1)");
             var serviceProvider = BuildServiceProvider(args);
             var p = serviceProvider.GetService<Processor>();
             p.Process();

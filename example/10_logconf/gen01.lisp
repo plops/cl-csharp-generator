@@ -141,20 +141,9 @@
 				      (format nil "~a ~a { get; }"
 					      type
 					      (cl-change-case:pascal-case (format nil "~a" name)))))))
-	      (space IConfig (MergeObject "IConfig other") )))
-	   #+nil (defclass Config (IConfig)
-	     (declare (public))
-	     ,@(remove-if #'null
-		(loop for e in l-conf
-		      collect
-		      (destructuring-bind (&key name short type default required (config t)) e
-			(when config
-			  (format nil "public ~a ~a { get; set; }"
-				  type
-				  (cl-change-case:pascal-case (format nil "~a" name)))))))))
-
+	      (space IConfig (MergeObject "IConfig other") ))))
 	  
-	  (defclass Config (IConfig)	; Options ()
+	  (defclass Config (IConfig)
 	    ,@(remove-if #'null
 	       (loop for e in l-conf
 		     appending
@@ -260,22 +249,11 @@ There are three types of lifetimes available: `scoped`, `transient`, and `single
 	
 		 )
 		
-		(let (#+nil (switchMappings
-			      (space
-			       (new ("Dictionary<string,string>"))
-			       (curly
-				,@(remove-if
-				   #'null
-				   (loop for e in l-conf
-					 collect
-					 (destructuring-bind (&key name short type default required (config t)) e
-					   (when config
-					     `(curly (string ,(format nil "-~a" short))
-						     (string ,(cl-change-case:pascal-case (format nil "~a" name)))) )))))))
+		(let (
 		      (configuration (new (dot (ConfigurationBuilder)
-					       (AddJsonFile options.ConfigFile ;(string "appSettings.json")
+					       (AddJsonFile options.ConfigFile
 							    "optional: false")
-					;(AddCommandLine args switchMappings)
+					
 					       (Build))))))
 		(space IConfig (= config (configuration.Get<Config> )))
 		,@(loop for e in l-conf
