@@ -51,7 +51,8 @@ namespace LogConf
             // - `transient` means that a new instance of the service is created every time it is requested from the `ServiceProvider`. 
             // - `scoped` means that the same instance of the service is returned within a specific scope defined by `using (var scope = serviceProvider.CreateScope()) {...}`, but different instances are returned in other scopes. 
             // - `singleton` always returns the same instance of the service. It is important to note that any operations performed by the singleton service must be thread-safe.
-            var configuration = new ConfigurationBuilder().AddJsonFile("appSettings.json", optional: false).AddCommandLine(args).Build();
+            var switchMappings = new Dictionary<string, string>() { { "-x", "Executable" }, { "-f", "LogFile" }, { "-l", "DebugLevel" } };
+            var configuration = new ConfigurationBuilder().AddJsonFile("appSettings.json", optional: false).AddCommandLine(args, switchMappings).Build();
             IConfig config = configuration.Get<Config>();
             collection.AddSingleton<IConfig>(config);
             collection.AddTransient<ILogger, Logger>();
@@ -60,7 +61,7 @@ namespace LogConf
         }
         public static void Main(string[] args)
         {
-            Console.WriteLine($"code generation on: 11:59:01 of Saturday, 2023-03-18 (GMT+1)");
+            Console.WriteLine($"code generation on: 12:56:57 of Sunday, 2023-03-19 (GMT+1)");
             var serviceProvider = BuildServiceProvider(args);
             var p = serviceProvider.GetService<Processor>();
             p.Process();

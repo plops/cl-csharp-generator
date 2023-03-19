@@ -103,7 +103,7 @@
 		  (:name log-file :short f :type string :default (string "") :required nil)
 		  (:name debug-level :short l :type string :default (string "") :required nil)
 		  ;(:name config-file :short c :type string :default (string "") :required nil :config nil)
-		  ;(:name help :short h :type flag :default false :required nil :config nil)
+		  (:name help :short h :type flag :default false :required nil :config nil)
 		  )
 		))
    (let ((name 'Program))
@@ -124,20 +124,24 @@
 	   (space-n
 	    public interface IConfig
 	    (progn
-	      ,@(loop for e in l-conf
-		      collect
-		      (destructuring-bind (&key name short type default required (config t)) e
-			(format nil "~a ~a { get; }"
-				type
-				(cl-change-case:pascal-case (format nil "~a" name)))))))
+	      ,@(remove-if #'null
+			    (loop for e in l-conf
+				  collect
+				  (destructuring-bind (&key name short type default required (config t)) e
+				    (when config
+				      (format nil "~a ~a { get; }"
+					      type
+					      (cl-change-case:pascal-case (format nil "~a" name)))))))))
 	   (defclass Config (IConfig)
 	     (declare (public))
-	     ,@(loop for e in l-conf
-		     collect
-		     (destructuring-bind (&key name short type default required (config t)) e
-		       (format nil "public ~a ~a { get; set; }"
-			       type
-			       (cl-change-case:pascal-case (format nil "~a" name)))))))
+	     ,@(remove-if #'null
+		(loop for e in l-conf
+		      collect
+		      (destructuring-bind (&key name short type default required (config t)) e
+			(when config
+			  (format nil "public ~a ~a { get; set; }"
+				  type
+				  (cl-change-case:pascal-case (format nil "~a" name)))))))))
 
 	  (do0
 	   (space-n
@@ -183,10 +187,22 @@ There are three types of lifetimes available: `scoped`, `transient`, and `single
 - `singleton` always returns the same instance of the service. It is important to note that any operations performed by the singleton service must be thread-safe."
 		 )
 
-		(let ((configuration (new (dot (ConfigurationBuilder)
+		(let ((switchMappings
+			(space
+			 (new ("Dictionary<string,string>"))
+			 (curly
+			  ,@(remove-if
+			     #'null
+			     (loop for e in l-conf
+				   collect
+				   (destructuring-bind (&key name short type default required (config t)) e
+				     (when config
+				       `(curly (string ,(format nil "-~a" short))
+					       (string ,(cl-change-case:pascal-case (format nil "~a" name)))) )))))))
+		      (configuration (new (dot (ConfigurationBuilder)
 					       (AddJsonFile (string "appSettings.json")
 							    "optional: false")
-					       (AddCommandLine args)
+					       (AddCommandLine args switchMappings)
 					       (Build))))))
 		(space IConfig (= config (configuration.Get<Config> )))
 		(collection.AddSingleton<IConfig> config)
