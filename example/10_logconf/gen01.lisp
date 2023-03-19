@@ -100,11 +100,15 @@
 	  (out "</ItemGroup>"))
 	(out "</Project>"))))
 
-  (let ((l-conf `((:name executable :short x :type string :default (string "/usr/bin/ls") :required nil)
-		  (:name log-file :short f :type string :default (string "") :required nil)
-		  (:name debug-level :short l :type string :default (string "") :required nil)
-		  (:name config-file :short c :type string :default (string "appSettings.json") :required nil :config nil)
-		  (:name host-name :short h :type string :default (string "") :required nil :config nil)
+  (let ((l-conf `((:name executable :short x :type string? :default (string "/usr/bin/ls") :required nil)
+		  (:name log-file :short f :type string? ; :default (string "")
+		   :required nil)
+		  (:name debug-level :short l :type string? ;:default (string "")
+		   :required nil
+			 )
+		  (:name config-file :short c :type string? :default (string "appSettings.json") :required nil :config nil)
+		  (:name host-name :short h :type string? ;:default (string "")
+		   :required nil :config nil)
 		  (:name port :short p :type int? :required nil :config nil)
 		  ;(:name help :short h :type bool :default false :required nil :config nil)
 		  )
@@ -274,12 +278,17 @@ There are three types of lifetimes available: `scoped`, `transient`, and `single
 					;(AddCommandLine args switchMappings)
 					       (Build))))))
 		(space IConfig (= config (configuration.Get<Config> )))
-
 		,@(loop for e in l-conf
-		      collect
-		      (destructuring-bind (&key name short type default required (config t)) e
-			(lprint :vars `((dot config 
-					     ,(cl-change-case:pascal-case (format nil "~a" name))))) ))
+			collect
+			(destructuring-bind (&key name short type default required (config t)) e
+			  (lprint :vars `((dot config 
+					       ,(cl-change-case:pascal-case (format nil "~a" name))))) ))
+		(let ((options2 (options.MergeObject config)))
+		  ,@(loop for e in l-conf
+			  collect
+			  (destructuring-bind (&key name short type default required (config t)) e
+			    (lprint :vars `((dot options2
+						 ,(cl-change-case:pascal-case (format nil "~a" name))))) )))
 		(collection.AddSingleton<IConfig> config)
 		(dot collection ("AddTransient<ILogger,Logger>"))
 		(collection.AddSingleton<Processor>)

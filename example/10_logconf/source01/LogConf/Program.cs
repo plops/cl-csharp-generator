@@ -7,26 +7,26 @@ namespace LogConf
 {
     public interface IConfig
     {
-        string Executable { get; }
-        string LogFile { get; }
-        string DebugLevel { get; }
-        string ConfigFile { get; }
-        string HostName { get; }
+        string? Executable { get; }
+        string? LogFile { get; }
+        string? DebugLevel { get; }
+        string? ConfigFile { get; }
+        string? HostName { get; }
         int? Port { get; }
         IConfig MergeObject(IConfig other);
     }
     public class Config : IConfig
     {
         [Option('x', "executable", Required = false, HelpText = "bla")]
-        public string Executable { get; set; }
+        public string? Executable { get; set; }
         [Option('f', "log-file", Required = false, HelpText = "bla")]
-        public string LogFile { get; set; }
+        public string? LogFile { get; set; }
         [Option('l', "debug-level", Required = false, HelpText = "bla")]
-        public string DebugLevel { get; set; }
+        public string? DebugLevel { get; set; }
         [Option('c', "config-file", Required = false, HelpText = "bla")]
-        public string ConfigFile { get; set; }
+        public string? ConfigFile { get; set; }
         [Option('h', "host-name", Required = false, HelpText = "bla")]
-        public string HostName { get; set; }
+        public string? HostName { get; set; }
         [Option('p', "port", Required = false, HelpText = "bla")]
         public int? Port { get; set; }
         public IConfig MergeObject(IConfig other)
@@ -101,6 +101,13 @@ namespace LogConf
             Console.WriteLine($" config.ConfigFile='{config.ConfigFile}'");
             Console.WriteLine($" config.HostName='{config.HostName}'");
             Console.WriteLine($" config.Port='{config.Port}'");
+            var options2 = options.MergeObject(config);
+            Console.WriteLine($" options2.Executable='{options2.Executable}'");
+            Console.WriteLine($" options2.LogFile='{options2.LogFile}'");
+            Console.WriteLine($" options2.DebugLevel='{options2.DebugLevel}'");
+            Console.WriteLine($" options2.ConfigFile='{options2.ConfigFile}'");
+            Console.WriteLine($" options2.HostName='{options2.HostName}'");
+            Console.WriteLine($" options2.Port='{options2.Port}'");
             collection.AddSingleton<IConfig>(config);
             collection.AddTransient<ILogger, Logger>();
             collection.AddSingleton<Processor>();
@@ -108,7 +115,7 @@ namespace LogConf
         }
         public static void Main(string[] args)
         {
-            Console.WriteLine($"code generation on: 23:09:16 of Sunday, 2023-03-19 (GMT+1)");
+            Console.WriteLine($"code generation on: 23:11:45 of Sunday, 2023-03-19 (GMT+1)");
             var serviceProvider = BuildServiceProvider(args);
             var p = serviceProvider.GetService<Processor>();
             p.Process();
