@@ -250,7 +250,9 @@ There are three types of lifetimes available: `scoped`, `transient`, and `single
 				   (lambda (with)
 				     (setf with.IgnoreUnknownArguments true
 					   with.AutoHelp true
-					   with.AutoVersion true)))))
+					   with.AutoVersion true
+					  ; with.HelpWriter System.IO.TextWriter ;Console.WriteLine
+					   )))))
 		     (options (dot parser
 				   (ParseArguments<Options> args)
 				   #+nil (WithParsed (lambda (opts)
@@ -259,7 +261,7 @@ There are three types of lifetimes available: `scoped`, `transient`, and `single
 						 Console
 						 (WriteLine
 						  (HelpText.AutoBuild<Options> null null))))))
-				   (WithNotParsed
+				   #+nil (WithNotParsed
 					      (lambda (errors)
 						(dot
 						 Console
