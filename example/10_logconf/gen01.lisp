@@ -100,10 +100,16 @@
 	  (out "</ItemGroup>"))
 	(out "</Project>"))))
 
-  (let ((l-conf `((:name executable :short x :type string :default (string "/usr/bin/ls") :required nil)
-		  (:name log-file :short f :type string :default (string "") :required nil)
-		  (:name debug-level :short l :type string :default (string "") :required nil)
-		  (:name config-file :short c :type string :default (string "") :required nil :config nil)
+  (let ((l-conf `((:name executable :short x :type string? :default (string "/usr/bin/ls") :required nil)
+		  (:name log-file :short f :type string? ; :default (string "")
+		   :required nil)
+		  (:name debug-level :short l :type string? ;:default (string "")
+		   :required nil
+			 )
+		  (:name config-file :short c :type string? :default (string "appSettings.json") :required nil :config nil)
+		  (:name host-name :short h :type string? ;:default (string "")
+		   :required nil :config nil)
+		  (:name port :short p :type int? :required nil :config nil)
 		  ;(:name help :short h :type bool :default false :required nil :config nil)
 		  )
 		))
@@ -131,36 +137,42 @@
 			    (loop for e in l-conf
 				  collect
 				  (destructuring-bind (&key name short type default required (config t)) e
-				    (when config
+				    (progn ;when config
 				      (format nil "~a ~a { get; }"
 					      type
-					      (cl-change-case:pascal-case (format nil "~a" name)))))))))
-	   (defclass Config (IConfig)
-	     (declare (public))
-	     ,@(remove-if #'null
-		(loop for e in l-conf
-		      collect
-		      (destructuring-bind (&key name short type default required (config t)) e
-			(when config
-			  (format nil "public ~a ~a { get; set; }"
-				  type
-				  (cl-change-case:pascal-case (format nil "~a" name)))))))))
-
-	  (do0
-	   (defclass Options ()
+					      (cl-change-case:pascal-case (format nil "~a" name)))))))
+	      (space IConfig (MergeObject "IConfig other") ))))
+	  
+	  (defclass Config (IConfig)
 	    ,@(remove-if #'null
-		(loop for e in l-conf
-		      appending
-		      (destructuring-bind (&key name short type default required (config t)) e
-			(unless config
-			  `((bracket-n (Option (char ,short) (string ,name)
-					       (= Required ,(if required "true" "false"))
-					       (= HelpText (string "bla"))))
-			    (space-n public
-				     ,type
-				     ,(cl-change-case:pascal-case (format nil "~a" name))
-				     "{ get; set; }"))))))
-	     ))
+	       (loop for e in l-conf
+		     appending
+		     (destructuring-bind (&key name short type default required (config t)) e
+		       (progn		;unless config
+			 `((bracket-n (Option (char ,short) (string ,name)
+					      (= Required ,(if required "true" "false"))
+					      (= HelpText (string "bla"))))
+			   (space-n public
+				    ,type
+				    ,(cl-change-case:pascal-case (format nil "~a" name))
+				    "{ get; set; }")))))
+	       )
+	    (defmethod MergeObject (other)
+	      (declare (type IConfig other)
+		       (values IConfig))
+	      (let ((result (new (Config))))
+		,@(loop for e in l-conf
+		     collect
+		     (destructuring-bind (&key name short type default required (config t)) e
+		       (let ((pascal-name (cl-change-case:pascal-case (format nil "~a" name))))
+			 `(setf
+			   (dot result ,pascal-name)
+			   (space (dot this ,pascal-name)
+				  "??"
+				  (dot other ,pascal-name)
+				  )))))
+		(return result)))
+	    )
 
 	  (do0
 	   (space-n
@@ -206,24 +218,55 @@ There are three types of lifetimes available: `scoped`, `transient`, and `single
 - `singleton` always returns the same instance of the service. It is important to note that any operations performed by the singleton service must be thread-safe."
 		 )
 
-		(let ((switchMappings
-			(space
-			 (new ("Dictionary<string,string>"))
-			 (curly
-			  ,@(remove-if
-			     #'null
-			     (loop for e in l-conf
-				   collect
-				   (destructuring-bind (&key name short type default required (config t)) e
-				     (when config
-				       `(curly (string ,(format nil "-~a" short))
-					       (string ,(cl-change-case:pascal-case (format nil "~a" name)))) )))))))
+		(let ((options (dot Parser
+				   Default
+					     (ParseArguments<Config> args)
+					     #+nil (WithParsed
+						    (lambda (options)
+						
+						(when options.Verbose
+						  ,(lprint :vars `(,@(loop for e in l-opt
+									   collect
+									   (destructuring-bind (&key name short type required default helptext) e
+									     `(dot options
+										   ,(cl-change-case:pascal-case (format nil "~a" name)))))
+								   )))))
+					     (WithNotParsed
+					      (lambda (errors)
+
+						(dot
+						 Console
+						 (WriteLine
+						  (HelpText.AutoBuild<Config> null null)))))
+					     (MapResult (lambda (options) (return options))
+							(lambda (errors) (return null))))))
+		 
+		 ,@(loop for e in l-conf
+		      collect
+		      (destructuring-bind (&key name short type default required (config t)) e
+			(lprint :vars `((dot options
+					     ,(cl-change-case:pascal-case (format nil "~a" name))))) ))
+	
+		 )
+		
+		(let (
 		      (configuration (new (dot (ConfigurationBuilder)
-					       (AddJsonFile (string "appSettings.json")
+					       (AddJsonFile options.ConfigFile
 							    "optional: false")
-					       (AddCommandLine args switchMappings)
+					
 					       (Build))))))
 		(space IConfig (= config (configuration.Get<Config> )))
+		,@(loop for e in l-conf
+			collect
+			(destructuring-bind (&key name short type default required (config t)) e
+			  (lprint :vars `((dot config 
+					       ,(cl-change-case:pascal-case (format nil "~a" name))))) ))
+		(let ((options2 (options.MergeObject config)))
+		  ,@(loop for e in l-conf
+			  collect
+			  (destructuring-bind (&key name short type default required (config t)) e
+			    (lprint :vars `((dot options2
+						 ,(cl-change-case:pascal-case (format nil "~a" name))))) )))
 		(collection.AddSingleton<IConfig> config)
 		(dot collection ("AddTransient<ILogger,Logger>"))
 		(collection.AddSingleton<Processor>)
@@ -246,31 +289,7 @@ There are three types of lifetimes available: `scoped`, `transient`, and `single
 				       date
 				       (- tz))))
 
-	       (let ((parser (new (CommandLine.Parser
-				   (lambda (with)
-				     (setf with.IgnoreUnknownArguments true
-					   with.AutoHelp true
-					   with.AutoVersion true
-					  ; with.HelpWriter System.IO.TextWriter ;Console.WriteLine
-					   )))))
-		     (options (dot parser
-				   (ParseArguments<Options> args)
-				   #+nil (WithParsed (lambda (opts)
-						 (when opts.Help
-						   (dot
-						 Console
-						 (WriteLine
-						  (HelpText.AutoBuild<Options> null null))))))
-				   #+nil (WithNotParsed
-					      (lambda (errors)
-						(dot
-						 Console
-						 (WriteLine
-						  (HelpText.AutoBuild<Options> null null)))))
-				   (MapResult (lambda (options) (return options))
-					      (lambda (errors) (return null))))))
-		 ,(lprint :vars `(options.ConfigFile))
-		 )
+	       
 	       
 	       (let ((serviceProvider (BuildServiceProvider args))
 		     (p (serviceProvider.GetService<Processor>))
