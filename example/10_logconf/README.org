@@ -4,3 +4,11 @@
   command line params
 
 https://youtu.be/6dXb4oF1rZA dependency injection seems nice (to pass logger around)
+
+- I find the command line parsing provided by
+  Microsoft.Extensions.Configuration.CommandLine severely lacking. I
+  would like to have automatic generation of the usage message and
+  support for boolean flags without explicitly writing true or false
+  on the command line.
+https://github.com/commandlineparser/commandline/issues/796
+

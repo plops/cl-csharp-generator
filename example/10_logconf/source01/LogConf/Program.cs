@@ -8,12 +8,16 @@ namespace LogConf
         string Executable { get; }
         string LogFile { get; }
         string DebugLevel { get; }
+        string ConfigFile { get; }
+        bool Help { get; }
     }
     public class Config : IConfig
     {
         public string Executable { get; set; }
         public string LogFile { get; set; }
         public string DebugLevel { get; set; }
+        public string ConfigFile { get; set; }
+        public bool Help { get; set; }
     }
     public interface ILogger
     {
@@ -51,7 +55,7 @@ namespace LogConf
             // - `transient` means that a new instance of the service is created every time it is requested from the `ServiceProvider`. 
             // - `scoped` means that the same instance of the service is returned within a specific scope defined by `using (var scope = serviceProvider.CreateScope()) {...}`, but different instances are returned in other scopes. 
             // - `singleton` always returns the same instance of the service. It is important to note that any operations performed by the singleton service must be thread-safe.
-            var switchMappings = new Dictionary<string, string>() { { "-x", "Executable" }, { "-f", "LogFile" }, { "-l", "DebugLevel" } };
+            var switchMappings = new Dictionary<string, string>() { { "-x", "Executable" }, { "-f", "LogFile" }, { "-l", "DebugLevel" }, { "-c", "ConfigFile" }, { "-h", "Help" } };
             var configuration = new ConfigurationBuilder().AddJsonFile("appSettings.json", optional: false).AddCommandLine(args, switchMappings).Build();
             IConfig config = configuration.Get<Config>();
             collection.AddSingleton<IConfig>(config);
@@ -61,7 +65,7 @@ namespace LogConf
         }
         public static void Main(string[] args)
         {
-            Console.WriteLine($"code generation on: 12:56:57 of Sunday, 2023-03-19 (GMT+1)");
+            Console.WriteLine($"code generation on: 12:59:56 of Sunday, 2023-03-19 (GMT+1)");
             var serviceProvider = BuildServiceProvider(args);
             var p = serviceProvider.GetService<Processor>();
             p.Process();

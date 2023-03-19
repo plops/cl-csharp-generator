@@ -102,8 +102,10 @@
   (let ((l-conf `((:name executable :short x :type string :default (string "/usr/bin/ls") :required nil)
 		  (:name log-file :short f :type string :default (string "") :required nil)
 		  (:name debug-level :short l :type string :default (string "") :required nil)
-		  ;(:name config-file :short c :type string :default (string "") :required nil :config nil)
-		  (:name help :short h :type flag :default false :required nil :config nil)
+		  (:name config-file :short c :type string :default (string "") :required nil ; :config nil
+			 )
+		  (:name help :short h :type bool :default false :required nil ; :config nil
+			 )
 		  )
 		))
    (let ((name 'Program))
