@@ -12,3 +12,4 @@ https://youtu.be/6dXb4oF1rZA dependency injection seems nice (to pass logger aro
   on the command line.
 https://github.com/commandlineparser/commandline/issues/796
 
+https://github.com/commandlineparser/commandline/issues/536

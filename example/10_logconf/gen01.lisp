@@ -81,6 +81,7 @@
 			   (:name Microsoft.Extensions.Logging :version 7.0.0)
 			   (:name Microsoft.Extensions.Logging.Console :version 7.0.0)
 			   (:name Microsoft.Extensions.DependencyInjection :version 7.0.0)
+			   (:name CommandLineParser :version 2.9.1)
 			   )
 		do
 		   (destructuring-bind (&key name version) e
@@ -102,10 +103,8 @@
   (let ((l-conf `((:name executable :short x :type string :default (string "/usr/bin/ls") :required nil)
 		  (:name log-file :short f :type string :default (string "") :required nil)
 		  (:name debug-level :short l :type string :default (string "") :required nil)
-		  (:name config-file :short c :type string :default (string "") :required nil ; :config nil
-			 )
-		  (:name help :short h :type bool :default false :required nil ; :config nil
-			 )
+		  (:name config-file :short c :type string :default (string "") :required nil :config nil)
+		  ;(:name help :short h :type bool :default false :required nil :config nil)
 		  )
 		))
    (let ((name 'Program))
@@ -117,7 +116,9 @@
       `(do0
 	(using	Microsoft.Extensions.Configuration
 		Microsoft.Extensions.Logging
-		Microsoft.Extensions.DependencyInjection)
+		Microsoft.Extensions.DependencyInjection
+		CommandLine
+		CommandLine.Text)
 	(do0
 	 (namespace
 	  ,(format nil "~a" project)
@@ -144,6 +145,22 @@
 			  (format nil "public ~a ~a { get; set; }"
 				  type
 				  (cl-change-case:pascal-case (format nil "~a" name)))))))))
+
+	  (do0
+	   (defclass Options ()
+	    ,@(remove-if #'null
+		(loop for e in l-conf
+		      appending
+		      (destructuring-bind (&key name short type default required (config t)) e
+			(unless config
+			  `((bracket-n (Option (char ,short) (string ,name)
+					       (= Required ,(if required "true" "false"))
+					       (= HelpText (string "bla"))))
+			    (space-n public
+				     ,type
+				     ,(cl-change-case:pascal-case (format nil "~a" name))
+				     "{ get; set; }"))))))
+	     ))
 
 	  (do0
 	   (space-n
@@ -229,6 +246,29 @@ There are three types of lifetimes available: `scoped`, `transient`, and `single
 				       date
 				       (- tz))))
 
+	       (let ((parser (new (CommandLine.Parser
+				   (lambda (with)
+				     (setf with.IgnoreUnknownArguments true
+					   with.AutoHelp true
+					   with.AutoVersion true)))))
+		     (options (dot parser
+				   (ParseArguments<Options> args)
+				   #+nil (WithParsed (lambda (opts)
+						 (when opts.Help
+						   (dot
+						 Console
+						 (WriteLine
+						  (HelpText.AutoBuild<Options> null null))))))
+				   (WithNotParsed
+					      (lambda (errors)
+						(dot
+						 Console
+						 (WriteLine
+						  (HelpText.AutoBuild<Options> null null)))))
+				   (MapResult (lambda (options) (return options))
+					      (lambda (errors) (return null))))))
+		 ,(lprint :vars `(options.ConfigFile))
+		 )
 	       
 	       (let ((serviceProvider (BuildServiceProvider args))
 		     (p (serviceProvider.GetService<Processor>))
