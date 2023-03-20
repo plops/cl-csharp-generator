@@ -86,14 +86,18 @@ namespace LogConf
             // - `transient` means that a new instance of the service is created every time it is requested from the `ServiceProvider`. 
             // - `scoped` means that the same instance of the service is returned within a specific scope defined by `using (var scope = serviceProvider.CreateScope()) {...}`, but different instances are returned in other scopes. 
             // - `singleton` always returns the same instance of the service. It is important to note that any operations performed by the singleton service must be thread-safe.
+            Console.WriteLine($"parse cmdline params");
             var options = Parser.Default.ParseArguments<Config>(args).WithNotParsed((errors) =>
             {
+                Console.WriteLine($"with-not-parsed");
                 Console.WriteLine(HelpText.AutoBuild<Config>(null, null));
             }).MapResult((options) =>
             {
+                Console.WriteLine($"map-result options");
                 return options;
             }, (errors) =>
             {
+                Console.WriteLine($"map-result errors");
                 return null;
             });
             Console.WriteLine($" options.Executable='{options.Executable}'");
@@ -102,7 +106,9 @@ namespace LogConf
             Console.WriteLine($" options.ConfigFile='{options.ConfigFile}'");
             Console.WriteLine($" options.HostName='{options.HostName}'");
             Console.WriteLine($" options.Port='{options.Port}'");
+            Console.WriteLine($"parse config file");
             var configuration = new ConfigurationBuilder().AddJsonFile(options.ConfigFile, optional: false).Build();
+            Console.WriteLine($"get config");
             IConfig config = configuration.Get<Config>();
             Console.WriteLine($" config.Executable='{config.Executable}'");
             Console.WriteLine($" config.LogFile='{config.LogFile}'");
@@ -124,7 +130,7 @@ namespace LogConf
         }
         public static void Main(string[] args)
         {
-            Console.WriteLine($"code generation on: 22:31:22 of Monday, 2023-03-20 (GMT+1)");
+            Console.WriteLine($"code generation on: 22:36:23 of Monday, 2023-03-20 (GMT+1)");
             var serviceProvider = BuildServiceProvider(args);
             var p = serviceProvider.GetService<Processor>();
             p.Process();

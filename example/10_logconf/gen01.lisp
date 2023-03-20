@@ -221,7 +221,7 @@ There are three types of lifetimes available: `scoped`, `transient`, and `single
 - `scoped` means that the same instance of the service is returned within a specific scope defined by `using (var scope = serviceProvider.CreateScope()) {...}`, but different instances are returned in other scopes. 
 - `singleton` always returns the same instance of the service. It is important to note that any operations performed by the singleton service must be thread-safe."
 		 )
-
+		,(lprint :msg "parse cmdline params")
 		(let ((options (dot Parser
 				   Default
 					     (ParseArguments<Config> args)
@@ -237,13 +237,13 @@ There are three types of lifetimes available: `scoped`, `transient`, and `single
 								   )))))
 					     (WithNotParsed
 					      (lambda (errors)
-
+						,(lprint :msg "with-not-parsed")
 						(dot
 						 Console
 						 (WriteLine
 						  (HelpText.AutoBuild<Config> null null)))))
-					     (MapResult (lambda (options) (return options))
-							(lambda (errors) (return null))))))
+					     (MapResult (lambda (options) ,(lprint :msg "map-result options") (return options))
+							(lambda (errors) ,(lprint :msg "map-result errors") (return null))))))
 		 
 		 ,@(loop for e in l-conf
 		      collect
@@ -252,13 +252,14 @@ There are three types of lifetimes available: `scoped`, `transient`, and `single
 					     ,(cl-change-case:pascal-case (format nil "~a" name))))) ))
 	
 		 )
-		
+		,(lprint :msg "parse config file")
 		(let (
 		      (configuration (new (dot (ConfigurationBuilder)
 					       (AddJsonFile options.ConfigFile
 							    "optional: false")
 					
 					       (Build))))))
+		,(lprint :msg "get config")
 		(space IConfig (= config (configuration.Get<Config> )))
 		,@(loop for e in l-conf
 			collect
