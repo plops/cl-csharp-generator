@@ -17,6 +17,10 @@ namespace LogConf
     }
     public class Config : IConfig
     {
+        public Config()
+        {
+            Console.WriteLine($"construct Config");
+        }
         [Option('x', "executable", Required = false, HelpText = "bla")]
         public string? Executable { get; set; }
         [Option('f', "log-file", Required = false, HelpText = "bla")]
@@ -47,6 +51,10 @@ namespace LogConf
     }
     public class Logger : ILogger
     {
+        public Logger()
+        {
+            Console.WriteLine($"construct Logger");
+        }
         public void Log(string message)
         {
             Console.WriteLine($"[{DateTime.Now.ToShortTimeString()}] {message}");
@@ -58,6 +66,7 @@ namespace LogConf
         private readonly ILogger _logger;
         public Processor(IConfig config, ILogger logger)
         {
+            Console.WriteLine($"construct Processor");
             _config = config;
             _logger = logger;
         }
@@ -115,7 +124,7 @@ namespace LogConf
         }
         public static void Main(string[] args)
         {
-            Console.WriteLine($"code generation on: 23:15:17 of Sunday, 2023-03-19 (GMT+1)");
+            Console.WriteLine($"code generation on: 22:31:22 of Monday, 2023-03-20 (GMT+1)");
             var serviceProvider = BuildServiceProvider(args);
             var p = serviceProvider.GetService<Processor>();
             p.Process();

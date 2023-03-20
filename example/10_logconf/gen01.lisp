@@ -144,6 +144,9 @@
 	      (space IConfig (MergeObject "IConfig other") ))))
 	  
 	  (defclass Config (IConfig)
+	    (defmethod Config ()
+	      (declare (values :constructor))
+	      ,(lprint :msg "construct Config"))
 	    ,@(remove-if #'null
 	       (loop for e in l-conf
 		     appending
@@ -182,6 +185,9 @@
 	   
 	   (defclass Logger (ILogger)
 	     (declare (public))
+	     (defmethod Logger ()
+	       (declare (values :constructor))
+	       ,(lprint :msg "construct Logger"))
 	     (defmethod Log (message)
 	       (declare (type string message))
 	       (Console.WriteLine (string$ "[{DateTime.Now.ToShortTimeString()}] {message}")))))
@@ -192,6 +198,7 @@
 	      (declare (type IConfig config)
 		       (type ILogger logger)
 		       (values :constructor))
+	      ,(lprint :msg "construct Processor")
 	      (setf _config config
 		    _logger logger))
 	    (defmethod Process ()
@@ -199,9 +206,6 @@
 	      (_logger.Log (string$ "DebugLevel={_config.DebugLevel}"))))
 	  
 	  (defclass ,name ()
-
-	    
-	    
 	    (defmethod BuildServiceProvider (args)
 	      (declare (static)
 		       (type "string[]" args)
@@ -267,7 +271,7 @@ There are three types of lifetimes available: `scoped`, `transient`, and `single
 			  (destructuring-bind (&key name short type default required (config t)) e
 			    (lprint :vars `((dot options2
 						 ,(cl-change-case:pascal-case (format nil "~a" name))))) )))
-		(collection.AddSingleton<IConfig> config)
+		("collection.AddSingleton<IConfig>" config)
 		(dot collection ("AddTransient<ILogger,Logger>"))
 		(collection.AddSingleton<Processor>)
 		(return (collection.BuildServiceProvider))))
