@@ -12,3 +12,6 @@ pacman -Ss csfml
 ```
 dotnet build --no-incremental 
 ```
+
+- how to use stylecop without putting it as a dependency into a repo:
+https://bigfont.ca/install-and-use-stylecop-in-a-net-or-net-core-project-from-the-command-line/
