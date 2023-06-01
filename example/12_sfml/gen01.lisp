@@ -40,6 +40,12 @@
 			     (TargetFramework net6.0)
 			     (ImplicitUsings enable)
 			     (Nullable enable)
+			     (RuntimeIdentifier linux-x64)
+			     (PublishTrimmed true)
+			     (PublishReadyToRun true)
+			     (PublishSingleFile true)
+			     (SelfContained true)
+			     
 					;(IncludeAllContentForSelfExtract true)
 					;(TrimMode link)
 					;(PublishTrimmed true)
@@ -172,7 +178,7 @@
 			    (window.Display))))
 	      
 	       )))))))))
-  
+  ;;dotnet publish -c Release
   #+nil (sb-ext:run-program "/usr/bin/dotnet"
 		      `("format")
 		      :directory *source-dir*
