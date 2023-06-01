@@ -112,7 +112,7 @@
       `(do0
 	(using System
 	       SFML.Graphics
-	       SFML.WIndow
+	       SFML.Window
 	       SFML.System)
 	(do0
 	 (namespace
