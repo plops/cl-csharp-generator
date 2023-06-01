@@ -11,7 +11,7 @@ namespace SfmlExample
     {
         public static void Main(string[] args)
         {
-            Console.WriteLine($"code generation on: 21:32:16 of Thursday, 2023-06-01 (GMT+1)");
+            Console.WriteLine($"code generation on: 21:39:52 of Thursday, 2023-06-01 (GMT+1)");
             var window = new RenderWindow(new VideoMode(800, 600), "SFML.Net Window");
             var circle = new CircleShape(50f);
             circle.FillColor = Color.Red;
