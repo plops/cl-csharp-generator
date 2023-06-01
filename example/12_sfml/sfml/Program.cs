@@ -20,7 +20,7 @@ namespace SFMLNetExample
             };
 
             // Start the game loop
-            while (window.IsOpen)
+            while ((window.IsOpen))
             {
                 // Process events
                 window.DispatchEvents();
