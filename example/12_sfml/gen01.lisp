@@ -110,10 +110,11 @@
        *source-dir*)
      
       `(do0
-	(using System
-	       SFML.Graphics
-	       SFML.Window
-	       SFML.System)
+	(comments "Copyleft (c) 2023 Plops; MIT License")
+	(using				; System
+	 SFML.Graphics
+	 SFML.Window
+	 SFML.System)
 	(do0
 	 (namespace
 	  ,(format nil "~a" project)
