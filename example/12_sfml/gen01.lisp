@@ -88,7 +88,7 @@
 	  (out "</ItemGroup>"))
 
 	
-	(out "</Project>"))))
+	(out "</Project>"))))1
 
   (let ((l-conf `((:name executable :short x :type string? :default (string "/usr/bin/ls") :required nil)
 		  (:name log-file :short f :type string? ; :default (string "")
@@ -110,15 +110,21 @@
        *source-dir*)
      
       `(do0
-	(comments "Copyleft (c) 2023 Plops; MIT License")
-	(using				; System
-	 SFML.Graphics
-	 SFML.Window
-	 SFML.System)
+	(comments 
+		  "<copyright file=\"Program.cs\" company=\"Plops\">"
+		  "Copyleft (c) 2023 Plops. This file is MIT Licensed."
+		  "</copyright>"
+		  )
+	
 	(do0
 	 (namespace
 	  ,(format nil "~a" project)
-	  	  
+
+  	  (using				; System
+	 SFML.Graphics
+	 SFML.System
+	 SFML.Window)
+	  ""
 	  (defclass ,name ()
 	    
 	    (defmethod Main (args)

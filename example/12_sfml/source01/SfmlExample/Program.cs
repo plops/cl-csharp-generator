@@ -1,21 +1,28 @@
-// Copyleft (c) 2023 Plops; MIT License
-using SFML.Graphics;
-using SFML.Window;
-using SFML.System;
-namespace SfmlExample {
-        public class Program {
-                public static void Main (string[] args){
-                                    Console.WriteLine($"code generation on: 20:45:02 of Thursday, 2023-06-01 (GMT+1)");
-                        var window  = new RenderWindow(new VideoMode(800, 600), "SFML.Net Window");
-            var circle  = new CircleShape(50f);
-                        circle.FillColor=Color.Red;
-            circle.Position=new Vector2f(50f, 50f);
-            while (window.IsOpen) {
-                                window.DispatchEvents();
-                                window.Clear();
-                                window.Draw(circle);
-                                window.Display();
-}
-}
-}
+// <copyright file="Program.cs" company="Plops">
+// Copyleft (c) 2023 Plops. This file is MIT Licensed.
+// </copyright>
+namespace SfmlExample
+{
+    using SFML.Graphics;
+    using SFML.System;
+    using SFML.Window;
+
+    public class Program
+    {
+        public static void Main(string[] args)
+        {
+            Console.WriteLine($"code generation on: 21:05:34 of Thursday, 2023-06-01 (GMT+1)");
+            var window = new RenderWindow(new VideoMode(800, 600), "SFML.Net Window");
+            var circle = new CircleShape(50f);
+            circle.FillColor = Color.Red;
+            circle.Position = new Vector2f(50f, 50f);
+            while (window.IsOpen)
+            {
+                window.DispatchEvents();
+                window.Clear();
+                window.Draw(circle);
+                window.Display();
+            }
+        }
+    }
 }
