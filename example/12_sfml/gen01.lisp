@@ -151,12 +151,25 @@
 						(string "SFML.Net Window"))))
 		     (circle (new (CircleShape 50f))))
 		 (setf circle.FillColor Color.Red
+		       
 		       circle.Position (new (Vector2f 50f 50f)))
-		 (while window.IsOpen
-			(window.DispatchEvents)
-			(window.Clear)
-			(window.Draw circle)
-			(window.Display)))
+		 (let ((clock (new (Clock)))
+		       (baseRadius 50f)
+		       (pulseSpeed (cast float (/ (* 2 Math.PI )
+						  1.3))))
+
+		     (while window.IsOpen
+			    (window.DispatchEvents)
+			    (window.Clear)
+			    (let ((time (clock.ElapsedTime.AsSeconds)))
+			     (setf circle.Radius
+				   (* baseRadius
+				      (/ (+ 1 (cast float
+						  (Math.Sin (* pulseSpeed
+							       time))))
+					 2))))
+			    (window.Draw circle)
+			    (window.Display))))
 	      
 	       )))))))))
   
