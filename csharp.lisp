@@ -406,6 +406,11 @@ switches Return body and state."
 				    do
 				       (format s "~{// ~a~%~}"
 					       (cl-ppcre:split "\\n+" arg))))))
+		(namespace
+		   ;; namespace <name> {body}*
+		   (destructuring-bind (ns name &rest body) code
+		     (format nil "~a" (emit `(space-n namespace ,name
+						      (progn ,@body))))))
 		(paren
 		 ;; paren {args}*
 		 (let ((args (cdr code)))
