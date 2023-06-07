@@ -49,6 +49,8 @@
   ((type-env :initarg :type-env :accessor type-env :initform (make-hash-table))
    (public-p :initarg :public-p :accessor public-p :type boolean :initform nil)
    (static-p :initarg :static-p :accessor static-p :type boolean :initform nil)
+   (protected-p :initarg :protected-p :accessor protected-p :type boolean :initform nil)
+   (virtual-p :initarg :virtual-p :accessor virtual-p :type boolean :initform nil)
    (private-p :initarg :private-p :accessor private-p :type boolean :initform nil)
    (return-type :initarg :return-type :accessor return-type :initform nil)))
 
@@ -87,6 +89,10 @@ switches. Return body and state."
 			    (setf (public-p state) t))
 			  (when (eq (first declaration) 'private)
 			    (setf (private-p state) t))
+			  (when (eq (first declaration) 'protected)
+			    (setf (protected-p state) t))
+			  (when (eq (first declaration) 'virtual)
+			    (setf (virtual-p state) t))
 			  (when (eq (first declaration) 'values)
 			    (destructuring-bind (symb &rest types-opt) declaration
 			      (declare (ignorable symb))
@@ -231,57 +237,70 @@ switches Return body and state."
 	  ;; if no visibility string is given, C# defaults to private
 	  ;; here, i make visibility public by default,
 	  
-	  (let ((visibility "public"))
+	  (let ((visibility (cond
+			      ((and (return-type state)
+				    (<= 1 (length (return-type state)))
+				    (eq (first (return-type state))
+					:constructor))
+			       ;; (values :constructor) will not print anything
+			       "")
+			      (t "public"))))
 	    (when (public-p state)
 	      (setf visibility "public"))
 	    (when (private-p state)
 	      (setf visibility "private"))
+	    (when (protected-p state)
+	      (setf visibility "protected"))
 	    
-	   ;;         visibility         name
-	   ;;                 stat    ret   params
-	   ;;         1       2       3  4  5
-	   (format s "~@[~a ~]~@[~a ~]~a ~a ~a"
-		   ;; 1 visibilty
-		   visibility
-		   ;; 2 static
-		   (when (static-p state)
-		     "static")
-		   ;; 3 return value
-		   (let ((r (return-type state)))
-		    (if (< 1 (length r))
-			(break "multiple return values unsupported: ~a"
-			       r)
-			(if (car r)
-			    (case (car r)
-			      (:constructor "") ;; (values :constructor) will not print anything
-			      (t (car r)))
-			    "void")))
-		   ;; 4 name
-		   name
-		   ;; 5 positional parameters, followed by key parameters
-		   (funcall emit `(paren
-				   ;; positional
-				   ,@(loop for p in req-param
-					   collect
-					   (format nil "~a ~a"
-						   (let ((type (gethash p (type-env state))))
-						     (if type
-							 (funcall emit type)
-							 (break "can't find type for positional parameter ~a in defun"
-								p)))
-						   p))
-				   ;; optional parameters
-				   ,@(loop for ((keyword-name name) init supplied-p) in key-param
-					   collect
-					   (progn
-					     (format nil "~a ~a ~@[~a~]"
-						     (let ((type (gethash name (type-env state))))
-						       (if type
-							   (funcall emit type)
-							   (break "can't find type for keyword parameter ~a in defun"
-								  name)))
-						     name
-						     (format nil "= ~a" (funcall emit init)))))))))
+	    ;;         visibility                 name
+	    ;;                 stat    virtu   ret   params
+	    ;;         1       2       3       4  5  6
+	    (format s "~@[~a ~]~@[~a ~]~@[~a ~]~a ~a ~a"
+		    ;; 1 visibilty
+		    visibility
+		    ;; 2 static
+		    (when (static-p state)
+		      "static")
+		    ;; 3 virtual
+		    (when (virtual-p state)
+		      "virtual")
+		    ;; 4 return value
+		    (let ((r (return-type state)))
+		      (if (< 1 (length r))
+			  (break "multiple return values unsupported: ~a"
+				 r)
+			  (if (car r)
+			      (case (car r)
+				(:constructor "") ;; (values :constructor) will not print anything
+				(t (car r)))
+			      "void")))
+		    ;; 5 name
+		    name
+		    ;; 6 positional parameters, followed by key parameters
+		    (funcall emit `(paren
+				    ;; positional
+				    ,@(loop for p in req-param
+					    collect
+					    (format nil "~a ~a"
+						    (let ((type (gethash p (type-env state))))
+						      (if type
+							  (funcall emit type)
+							  (break "can't find type for positional parameter ~a in defun"
+								 p)))
+						    p))
+				    ;; optional parameters
+				    ,@(loop for ((keyword-name name) init supplied-p) in key-param
+					    collect
+					    (progn
+					      (format nil "~a ~a~@[ = ~a~]"
+						      (let ((type (gethash name (type-env state))))
+							(if type
+							    (funcall emit type)
+							    (break "can't find type for keyword parameter ~a in defun"
+								   name)))
+						      name
+						      (when init
+							(funcall emit init)))))))))
 	  (format s "~a" (funcall emit `(progn ,@body))))))))
 
 ;; //[access modifier] - [class] - [identifier]
@@ -629,6 +648,16 @@ switches Return body and state."
 								       (let ((a (elt args i))
 									     (b (elt args (+ 1 i))))
 									 `(= ,a ,b))))))))
+		  (setf?? 
+		   (let ((args (cdr code)))
+		     ;; "setf?? {pair}*" like setf but only if lhs isn't null
+		     (format nil "~a"
+			     (emit
+			      `(do0 
+				,@(loop for i below (length args) by 2 collect
+								       (let ((a (elt args i))
+									     (b (elt args (+ 1 i))))
+									 `(??= ,a ,b))))))))
 		  (not (format nil "!(~a)" (emit (car (cdr code)))))
 		  (deref (format nil "*(~a)" (emit (car (cdr code)))))
 		  (ref (format nil "&(~a)" (emit (car (cdr code)))))
@@ -663,6 +692,9 @@ switches Return body and state."
 		  (= (destructuring-bind (a b) (cdr code)
 		       ;; = pair
 		       (format nil "~a=~a" (emit a) (emit b))))
+		  (??= (destructuring-bind (a b) (cdr code)
+		       ;; = pair
+		       (format nil "~a??=~a" (emit a) (emit b))))
 		  (/= (destructuring-bind (a b) (cdr code)
 			(format nil "~a/=(~a)" (emit a) (emit b))))
 		  (*= (destructuring-bind (a b) (cdr code)
@@ -703,6 +735,10 @@ switches Return body and state."
 		  (string (format nil "\"~a\"" (cadr code)))
 		  (string$ (format nil "$\"~a\"" (cadr code)))
 		  (string@ (format nil "@\"~a\"" (cl-ppcre:regex-replace-all
+						  "\""
+						  (cadr code)
+						  "\"\"")))
+		  (string$@ (format nil "$@\"~a\"" (cl-ppcre:regex-replace-all
 						  "\""
 						  (cadr code)
 						  "\"\"")))
