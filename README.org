@@ -7,3 +7,96 @@ sudo dnf install mono-devel
 - https://www.youtube.com/watch?v=Ml2UakwRxjk Getting Started With ARFoundation in Unity (ARKit, ARCore)
   - 272,865 view 4 Jan 2019
   - https://github.com/TheUnityWorkbench/tuw-arfoundation-demo
+
+## GPT-4 description of the code in csharp.lisp until emit-cs function
+This code is written in Common Lisp and appears to be for a tool that
+generates C# source code from a higher level Lisp-like syntax.
+
+Here's a breakdown of some of the main components:
+
+- The package and library loading: The code starts by loading two
+  libraries, "alexandria" and "cl-ppcre", which provide utility
+  functions and regular expressions for Common Lisp, respectively.
+
+- The package definition: The `defpackage` form defines a new package
+  named `cl-csharp-generator` which uses the `cl`, `alexandria`, and
+  `cl-ppcre` packages.
+
+- The `write-source` function: This function appears to emit C# source
+  code to a file. It takes a filename and some code, computes hashes
+  to check if the code has changed since the last time it was written,
+  and then writes the code to the file if it has changed. This could
+  be used as part of a build process, to avoid recompiling code that
+  hasn't changed.
+
+- The `method-declare-state`, `let-declare-state`, and
+  `class-declare-state` classes: These are used to store the state of
+  a declaration while it is being parsed. They hold information like
+  the types of variables and whether or not a method is static,
+  virtual, public, protected, private, etc.
+
+- The `method-consume-declare`, `let-consume-declare`, and
+  `class-consume-declare` functions: These parse declarations in the
+  input code and populate the state classes with the appropriate
+  information. They return the rest of the body (after the
+  declaration) and the populated state object.
+
+- The `lookup-type` and `variable-declaration` functions: These are
+  utility functions used during the parsing process to find the type
+  of a variable and to declare a variable in the generated C# code.
+
+- The `parse-let`, `parse-defmethod`, and `parse-defclass` functions:
+  These are the main parsing functions that handle `let`, `defmethod`,
+  and `defclass` forms in the input code, respectively. They use the
+  state and helper functions to generate the corresponding C# code.
+
+- The `print-sufficient-digits-f32` function: This function seems to
+  be designed to print a float number with a sufficient number of
+  digits, but it's incomplete and its purpose in the context of the C#
+  generation tool isn't clear.
+
+In general, the purpose of this code seems to be to provide a tool for
+writing C# code in a Lisp-like syntax. It could be used to allow Lisp
+programmers to write C# code in a more familiar syntax, or to provide
+a higher level, more abstract interface for generating C# code. It's a
+kind of source-to-source compiler, or transpiler, from a Lisp dialect
+to C#.
+
+## GPT-4 description of the emit-cs function
+
+This code is written in Common Lisp, a dialect of the Lisp programming
+language, and defines a function `emit-cs`. The purpose of the
+function `emit-cs` is to take a symbolic expression (s-expression)
+representing C# code and emit (or generate) corresponding C# code as a
+string.
+
+This can be useful for code generation, templating, or transforming
+code into another representation. It can be seen as a kind of
+transpiler from a Lisp-based representation to C# code.
+
+This function is quite complex and supports a wide range of C#
+features, with each special form being handled by a different clause
+in the `case` statement. For instance, it can handle `if` expressions,
+binary operations, function calls, and much more. It also takes care
+of correctly formatting the generated code, including proper
+indentation and the inclusion of necessary symbols and delimiters.
+
+It should be noted that this function employs a certain level of
+metaprogramming, which is a powerful feature often used in Lisp and
+other functional programming languages. Metaprogramming refers to the
+capability to write programs that treat other programs (or themselves)
+as their data. This allows a program to be designed to read, generate,
+analyse or transform other programs, and even modify itself while
+running.
+
+In this particular function, it's clear that the metaprogramming is
+being used to treat code (specifically symbolic expressions or
+s-expressions) as data which can be manipulated and transformed. This
+is what allows for the transformation from the Lisp-like s-expression
+input to the C# code output.
+
+In summary, the purpose of this code is to act as a transpiler,
+converting Lisp-like symbolic expressions (s-expressions) into C#
+code. It's a good demonstration of how Lisp's features, particularly
+metaprogramming, can be used to create a highly flexible and powerful
+code generation tool.
