@@ -677,17 +677,13 @@ switches Return body and state."
 					(incf ,(emit i) ,(emit step)))
 				       ,@body))))
 		(foreach (destructuring-bind ((item collection) &rest body) (cdr code)
-			     (format nil "for (auto& ~a : ~a) ~a"
 			    (multiple-value-bind (body state) (let-consume-declare body)
-				     (emit item)
-			      (format nil "for (~a ~a : ~a) ~a"
-				     (emit collection)
-				      (or (lookup-type item state)
-				     (emit `(progn ,@body)))))
+			      (format nil "foreach (~a ~a in ~a) ~a"
+				      (or (lookup-type item :state state)
 					  "var")
 				      (emit item)
 				      (emit collection)
-				      (emit `(progn ,@body))))
+				      (emit `(progn ,@body))))))
 		(while ;; while condition {forms}*
 		 (destructuring-bind (condition &rest body) (cdr code)
 		   (format nil "while (~a) ~a"
